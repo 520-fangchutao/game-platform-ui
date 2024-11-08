@@ -7,7 +7,7 @@
             <el-header>游戏平台</el-header>
             <el-container>
                 <el-aside width="200px">
-                    <el-menu default-active="2" class="el-menu-vertical-demo" router="true">
+                    <el-menu default-active="1" router="true">
                         <el-sub-menu index="1">
                             <template #title>
                                 <el-icon><Present /></el-icon>

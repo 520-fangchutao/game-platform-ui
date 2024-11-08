@@ -2,14 +2,27 @@
 export default {
     data() {
         return {
-            options: [],
-            value: [],
+            gameName: '【TT联运】创游传奇',
+            gameZone: '',
+            gameZoneOps: [{ name: '1区', id: 5000 }],
+            itemOrEquire: [],
+            itemOrEquireOps: [],
+            quantity: 1,
             loading: false,
+            gameInfoOps: [{ name: '【TT联运】创游传奇', id: 7064 }],
+            bindRadio: '1',
+            sender: 'GM',
+            mailTitle: '1',
+            mailContent: '1',
+            sendLable: 'bug补偿',
+            sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
+            reason: '1',
+            textarea: ''
         };
     },
     methods: {
-        // 当用户输入内容开始远程搜索模糊查询的时候，会触发remoteMethod方法
-        remoteMethod(query) {
+        // 当用户输入内容开始远程搜索模糊查询的时候，会触发searchItemOrEquire方法
+        searchItemOrEquire(query) {
             // 如果用户输入内容了，就发请求拿数据，远程搜索模糊查询
             if (query !== "") {
                 this.loading = true; // 开始拿数据喽
@@ -34,8 +47,7 @@ export default {
                 ];
                 this.loading = false // 拿到数据喽
                 // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
-                this.options = res.filter((item) => {
-
+                this.itemOrEquireOps = res.filter((item) => {
                     // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
                     // return item.label.toLowerCase().indexOf(query.toLowerCase()) == 0
 
@@ -53,32 +65,85 @@ export default {
 <template>
     <div>
         <el-row>
-            <el-col :span="24">
-                <span class="font-label">装备道具</span>
+            <el-col :span="7">
+                <span class="font-label">游戏名称 </span>
+                <el-select v-model="gameName" placeholder="选择游戏" size="small" style="width: 250px">
+                    <el-option v-for="gameInfoOp in gameInfoOps" :key="gameInfoOp.id" :label="gameInfoOp.name"
+                        :value="gameInfoOp.id" />
+                </el-select>
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">区服名称 </span>
+                <el-select v-model="gameZone" placeholder="选择区服" size="small" style="width: 100px">
+                    <el-option v-for="gameZoneOp in gameZoneOps" :key="gameZoneOp.id" :label="gameZoneOp.name"
+                        :value="gameZoneOp.id" />
+                </el-select>
+            </el-col>
+            <el-col :span="9">
+                <span class="font-label">装备道具 </span>
                 <!-- 远程搜索要使用filterable和remote -->
-                <el-select v-model="value" filterable remote placeholder="请输入关键词" :remote-method="remoteMethod"
-                    :loading="loading" style="width: 300px;">
+                <el-select v-model="itemOrEquire" filterable remote placeholder="请输入装备/道具名" size="small"
+                    :remote-method="searchItemOrEquire" :loading="loading" style="width: 330px;">
                     <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
                         把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
-                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                    <el-option v-for="itemOrEquireOp in itemOrEquireOps" :key="itemOrEquireOp.value"
+                        :label="itemOrEquireOp.label" :value="itemOrEquireOp.value">
                     </el-option>
                 </el-select>
-                <!-- <el-button color="#626aef">添加</el-button> -->
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">数量 </span>
+                <el-input v-model="quantity" style="width: 100px" size="small" />
             </el-col>
         </el-row>
         <el-row>
-            <el-col :span="24">
-                <el-input v-model="textarea" style="width: 350px" :rows="10" type="textarea"
-                    placeholder="Please input" />
+            <el-col :span="3">
+                <el-radio-group v-model="bindRadio">
+                    <el-radio value="1" size="small">绑定</el-radio>
+                    <el-radio value="0" size="small">不绑定</el-radio>
+                </el-radio-group>
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">发件人 </span>
+                <el-input v-model="sender" style="width: 150px" size="small" />
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">邮标 </span>
+                <el-input v-model="mailTitle" style="width: 150px" size="small" />
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">内容 </span>
+                <el-input v-model="mailContent" style="width: 150px" size="small" />
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">标签 </span>
+                <el-select v-model="sendLable" size="small" style="width: 150px">
+                    <el-option v-for="sendLableOp in sendLableOps" :key="sendLableOp.id" :label="sendLableOp.value"
+                        :value="sendLableOp.id" />
+                </el-select>
+            </el-col>
+            <el-col :span="5">
+                <span class="font-label">理由 </span>
+                <el-input v-model="reason" style="width: 172px" size="small" />
+            </el-col>
+        </el-row>
+        <el-row>
+            <span class="font-label">游戏角色列表 </span>
+            <el-col :span="8">
+                <el-input v-model="textarea" style="width: 275px" :rows="5" type="textarea" resize="none"
+                    placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
         </el-row>
     </div>
 </template>
 
 <style lang="less" scoped>
-.font-label{
+.font-label {
     color: black;
     font-family: 宋体;
-    font-size: 18px;
+    font-size: 14px;
+}
+.el-row{
+    margin-bottom: 20px;
 }
 </style>
