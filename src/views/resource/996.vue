@@ -63,7 +63,7 @@ export default {
 };
 </script>
 <template>
-    <div>
+    <div class="mailReqBox">
         <el-row>
             <el-col :span="7">
                 <span class="font-label">游戏名称 </span>
@@ -129,9 +129,15 @@ export default {
         </el-row>
         <el-row>
             <span class="font-label">游戏角色列表 </span>
-            <el-col :span="8">
+            <el-col :span="5">
                 <el-input v-model="textarea" style="width: 275px" :rows="5" type="textarea" resize="none"
                     placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary">添加数据</el-button>
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary">提交数据</el-button>
             </el-col>
         </el-row>
     </div>
