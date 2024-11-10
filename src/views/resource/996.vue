@@ -18,7 +18,7 @@ export default {
             sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
             reason: '1',
             textarea: ''
-        };
+        }
     },
     methods: {
         // 当用户输入内容开始远程搜索模糊查询的时候，会触发searchItemOrEquire方法
@@ -27,27 +27,34 @@ export default {
             if (query !== "") {
                 this.loading = true; // 开始拿数据喽
                 // 这里模拟发请求，res就当成发请求返回来的数据吧。
-                let res = [
-                    {
-                        label: "孙悟空",
-                        value: 500,
-                    },
-                    {
-                        label: "孙尚香",
-                        value: 18,
-                    },
-                    {
-                        label: "沙和尚",
-                        value: 1000,
-                    },
-                    {
-                        label: "沙师弟",
-                        value: 999,
-                    },
-                ];
-                this.loading = false // 拿到数据喽
+                // let res = [
+                //     {
+                //         label: "孙悟空",
+                //         value: 500,
+                //     },
+                //     {
+                //         label: "孙尚香",
+                //         value: 18,
+                //     },
+                //     {
+                //         label: "沙和尚",
+                //         value: 1000,
+                //     },
+                //     {
+                //         label: "沙师弟",
+                //         value: 999,
+                //     },
+                // ];
+                let data = null
+                this.$http.get("http://localhost:8083/selectPageByKeyword?keyword="+query).then((res) => {
+                    data = res.data;
+                    console.log('装备OR道具：',data)
+                }).catch((error) => {
+                    console.log('错误输出：', error)
+                })
+                this.loading = false
                 // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
-                this.itemOrEquireOps = res.filter((item) => {
+                this.itemOrEquireOps = data.filter((item) => {
                     // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
                     // return item.label.toLowerCase().indexOf(query.toLowerCase()) == 0
 
@@ -56,11 +63,11 @@ export default {
                     return item.label.toLowerCase().indexOf(query.toLowerCase()) > -1
                 })
             } else {
-                this.options = [];
+                this.itemOrEquireOps = []
             }
-        },
-    },
-};
+        }
+    }
+}
 </script>
 <template>
     <div class="mailReqBox">
@@ -86,8 +93,8 @@ export default {
                     :remote-method="searchItemOrEquire" :loading="loading" style="width: 330px;">
                     <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
                         把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
-                    <el-option v-for="itemOrEquireOp in itemOrEquireOps" :key="itemOrEquireOp.value"
-                        :label="itemOrEquireOp.label" :value="itemOrEquireOp.value">
+                    <el-option v-for="itemOrEquireOp in itemOrEquireOps" :key="itemOrEquireOp.id"
+                        :label="itemOrEquireOp.name" :value="itemOrEquireOp.id">
                     </el-option>
                 </el-select>
             </el-col>
@@ -149,7 +156,8 @@ export default {
     font-family: 宋体;
     font-size: 14px;
 }
-.el-row{
+
+.el-row {
     margin-bottom: 20px;
 }
 </style>
