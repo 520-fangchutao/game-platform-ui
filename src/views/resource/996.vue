@@ -4,11 +4,12 @@ export default {
         return {
             gameName: '【TT联运】创游传奇',
             gameZone: '',
-            gameZoneOps: [{ name: '1区', id: 5000 }],
-            itemOrEquire: [],
+            gameZoneOps: [],
+            gameZoneLoading: false,
+            itemOrEquire: '',
             itemOrEquireOps: [],
+            itemOrEquireLoading: false,
             quantity: 1,
-            loading: false,
             gameInfoOps: [{ name: '【TT联运】创游传奇', id: 7064 }],
             bindRadio: '1',
             sender: 'GM',
@@ -21,46 +22,40 @@ export default {
         }
     },
     methods: {
+        searchGameZone(query){
+            if (query !== "") {
+                this.gameZoneLoading = true;
+                this.$http.get("http://localhost:8083/Jiu96/selectPageByZone?keyword=" + query).then((res) => {
+                    this.gameZoneOps = res.data.filter((item) => {
+                        return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
+                    })
+                    this.gameZoneLoading = false
+                }).catch((error) => {
+                    console.log('错误输出：', error)
+                })
+            } else {
+                this.gameZoneOps = []
+            }  
+        },
         // 当用户输入内容开始远程搜索模糊查询的时候，会触发searchItemOrEquire方法
         searchItemOrEquire(query) {
             // 如果用户输入内容了，就发请求拿数据，远程搜索模糊查询
             if (query !== "") {
-                this.loading = true; // 开始拿数据喽
-                // 这里模拟发请求，res就当成发请求返回来的数据吧。
-                // let res = [
-                //     {
-                //         label: "孙悟空",
-                //         value: 500,
-                //     },
-                //     {
-                //         label: "孙尚香",
-                //         value: 18,
-                //     },
-                //     {
-                //         label: "沙和尚",
-                //         value: 1000,
-                //     },
-                //     {
-                //         label: "沙师弟",
-                //         value: 999,
-                //     },
-                // ];
-                let data = null
-                this.$http.get("http://localhost:8083/selectPageByKeyword?keyword="+query).then((res) => {
-                    data = res.data;
-                    console.log('装备OR道具：',data)
+                this.itemOrEquireLoading = true;
+                // 开始拿数据                
+                this.$http.get("http://localhost:8083/Jiu96/selectPageByItemOrEq?keyword=" + query).then((res) => {
+                    // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
+                    this.itemOrEquireOps = res.data.filter((item) => {
+                        // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
+                        // return item.label.toLowerCase().indexOf(query.toLowerCase()) == 0
+
+                        // indexOf大于-1代表的是，只要有这个字出现的即可，如：搜索 王 王小虎、小虎王、小王虎都会被过滤出来。因为indexOf找不到才会返回-1，
+                        // 大于-1说明只要有就行，不论是不是开头也好，中间也好，或者结尾也好
+                        return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
+                    })
+                    this.itemOrEquireLoading = false
                 }).catch((error) => {
                     console.log('错误输出：', error)
-                })
-                this.loading = false
-                // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
-                this.itemOrEquireOps = data.filter((item) => {
-                    // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
-                    // return item.label.toLowerCase().indexOf(query.toLowerCase()) == 0
-
-                    // indexOf大于-1代表的是，只要有这个字出现的即可，如：搜索 王 王小虎、小虎王、小王虎都会被过滤出来。因为indexOf找不到才会返回-1，
-                    // 大于-1说明只要有就行，不论是不是开头也好，中间也好，或者结尾也好
-                    return item.label.toLowerCase().indexOf(query.toLowerCase()) > -1
                 })
             } else {
                 this.itemOrEquireOps = []
@@ -79,18 +74,19 @@ export default {
                         :value="gameInfoOp.id" />
                 </el-select>
             </el-col>
-            <el-col :span="4">
+            <el-col :span="5">
                 <span class="font-label">区服名称 </span>
-                <el-select v-model="gameZone" placeholder="选择区服" size="small" style="width: 100px">
+                <el-select v-model="gameZone" filterable remote placeholder="选择区服" size="small"
+                    :remote-method="searchGameZone" style="width: 170px">
                     <el-option v-for="gameZoneOp in gameZoneOps" :key="gameZoneOp.id" :label="gameZoneOp.name"
                         :value="gameZoneOp.id" />
                 </el-select>
             </el-col>
-            <el-col :span="9">
+            <el-col :span="7">
                 <span class="font-label">装备道具 </span>
                 <!-- 远程搜索要使用filterable和remote -->
                 <el-select v-model="itemOrEquire" filterable remote placeholder="请输入装备/道具名" size="small"
-                    :remote-method="searchItemOrEquire" :loading="loading" style="width: 330px;">
+                    :remote-method="searchItemOrEquire" :loading="itemOrEquireLoading" style="width: 280px;">
                     <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
                         把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
                     <el-option v-for="itemOrEquireOp in itemOrEquireOps" :key="itemOrEquireOp.id"
@@ -98,9 +94,9 @@ export default {
                     </el-option>
                 </el-select>
             </el-col>
-            <el-col :span="4">
+            <el-col :span="5">
                 <span class="font-label">数量 </span>
-                <el-input v-model="quantity" style="width: 100px" size="small" />
+                <el-input v-model="quantity" style="width: 172px" size="small" />
             </el-col>
         </el-row>
         <el-row>
@@ -136,7 +132,7 @@ export default {
         </el-row>
         <el-row>
             <span class="font-label">游戏角色列表 </span>
-            <el-col :span="5">
+            <el-col :span="6">
                 <el-input v-model="textarea" style="width: 275px" :rows="5" type="textarea" resize="none"
                     placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
