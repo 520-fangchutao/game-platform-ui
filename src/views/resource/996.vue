@@ -2,7 +2,7 @@
 export default {
     data() {
         return {
-            gameName: '【TT联运】创游传奇',
+            gameId: null,
             gameZone: '',
             gameZoneOps: [],
             gameZoneLoading: false,
@@ -25,7 +25,9 @@ export default {
         searchGameZone(query){
             if (query !== "") {
                 this.gameZoneLoading = true;
-                this.$http.get("http://localhost:8083/Jiu96/selectPageByZone?keyword=" + query).then((res) => {
+                //let gameName = this.$refs.gameInfoRef.selected.label
+                console.log(this.$refs.gameInfoRef.selected)
+                this.$http.get("http://192.168.2.75:8083/Jiu96/selectZone?keyword=" + query + "&gameName=" + gameName + "&gameId=" + gameId + "&queryRange=1").then((res) => {
                     this.gameZoneOps = res.data.filter((item) => {
                         return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
                     })
@@ -43,7 +45,7 @@ export default {
             if (query !== "") {
                 this.itemOrEquireLoading = true;
                 // 开始拿数据                
-                this.$http.get("http://localhost:8083/Jiu96/selectPageByItemOrEq?keyword=" + query).then((res) => {
+                this.$http.get("http://192.168.2.75:8083/Jiu96/selectPageByItemOrEq?keyword=" + query + "&gameName=" + this.gameName).then((res) => {
                     // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
                     this.itemOrEquireOps = res.data.filter((item) => {
                         // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
@@ -61,6 +63,10 @@ export default {
                 this.itemOrEquireOps = []
             }
         }
+    },
+    created(){
+        //默认选中第一项
+        this.gameId = this.gameInfoOps[0].id
     }
 }
 </script>
@@ -69,7 +75,7 @@ export default {
         <el-row>
             <el-col :span="7">
                 <span class="font-label">游戏名称 </span>
-                <el-select v-model="gameName" placeholder="选择游戏" size="small" style="width: 250px">
+                <el-select v-model="gameId"  ref="gameInfoRef" placeholder="选择游戏" size="small" style="width: 250px">
                     <el-option v-for="gameInfoOp in gameInfoOps" :key="gameInfoOp.id" :label="gameInfoOp.name"
                         :value="gameInfoOp.id" />
                 </el-select>
