@@ -2,15 +2,19 @@
 export default {
     data() {
         return {
-            gameId: null,
-            gameZone: '',
-            gameZoneOps: [],
+            gameName: {
+                op: null,
+                ops: [{ name: '【TT联运】创游传奇', id: 7064 }]
+            },
+            gameZone: {
+                op: null,
+                ops: []
+            },
             gameZoneLoading: false,
             itemOrEquire: '',
             itemOrEquireOps: [],
             itemOrEquireLoading: false,
             quantity: 1,
-            gameInfoOps: [{ name: '【TT联运】创游传奇', id: 7064 }],
             bindRadio: '1',
             sender: 'GM',
             mailTitle: '1',
@@ -22,22 +26,21 @@ export default {
         }
     },
     methods: {
-        searchGameZone(query){
+        searchGameZone(query) {
             if (query !== "") {
                 this.gameZoneLoading = true;
-                //let gameName = this.$refs.gameInfoRef.selected.label
-                console.log(this.$refs.gameInfoRef.selected)
-                this.$http.get("http://192.168.2.75:8083/Jiu96/selectZone?keyword=" + query + "&gameName=" + gameName + "&gameId=" + gameId + "&queryRange=1").then((res) => {
-                    this.gameZoneOps = res.data.filter((item) => {
+                this.$http.get("/Jiu96/selectZone?keyword=" + query + "&gameName=" + this.gameName.op.name + "&gameId=" + this.gameName.op.id + "&queryRange=1").then((res) => {
+                    /* this.gameZone.ops = res.data.filter((item) => {
                         return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
-                    })
+                    }) */
+                    this.gameZone.ops = res.data
                     this.gameZoneLoading = false
                 }).catch((error) => {
                     console.log('错误输出：', error)
                 })
             } else {
-                this.gameZoneOps = []
-            }  
+                this.gameZone.ops = []
+            }
         },
         // 当用户输入内容开始远程搜索模糊查询的时候，会触发searchItemOrEquire方法
         searchItemOrEquire(query) {
@@ -45,16 +48,11 @@ export default {
             if (query !== "") {
                 this.itemOrEquireLoading = true;
                 // 开始拿数据                
-                this.$http.get("http://192.168.2.75:8083/Jiu96/selectPageByItemOrEq?keyword=" + query + "&gameName=" + this.gameName).then((res) => {
-                    // 然后把拿到的所有数据，首先进行一个过滤，把有关联的过滤成一个新数组给到options使用
-                    this.itemOrEquireOps = res.data.filter((item) => {
-                        // indexOf等于0代表只要首个字匹配的，如：搜索 王 王小虎数据会被过滤出来，但是 小虎王的数据不会被过滤出来。因为indexOf等于0代表以什么开头
-                        // return item.label.toLowerCase().indexOf(query.toLowerCase()) == 0
-
-                        // indexOf大于-1代表的是，只要有这个字出现的即可，如：搜索 王 王小虎、小虎王、小王虎都会被过滤出来。因为indexOf找不到才会返回-1，
-                        // 大于-1说明只要有就行，不论是不是开头也好，中间也好，或者结尾也好
+                this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query + "&gameName=" + this.gameName.op.name).then((res) => {
+                    /* this.itemOrEquireOps = res.data.filter((item) => {
                         return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
-                    })
+                    }) */
+                    this.itemOrEquireOps = res.data
                     this.itemOrEquireLoading = false
                 }).catch((error) => {
                     console.log('错误输出：', error)
@@ -64,9 +62,9 @@ export default {
             }
         }
     },
-    created(){
+    created() {
         //默认选中第一项
-        this.gameId = this.gameInfoOps[0].id
+        this.gameName.op = this.gameName.ops[0]
     }
 }
 </script>
@@ -75,24 +73,28 @@ export default {
         <el-row>
             <el-col :span="7">
                 <span class="font-label">游戏名称 </span>
-                <el-select v-model="gameId"  ref="gameInfoRef" placeholder="选择游戏" size="small" style="width: 250px">
-                    <el-option v-for="gameInfoOp in gameInfoOps" :key="gameInfoOp.id" :label="gameInfoOp.name"
-                        :value="gameInfoOp.id" />
+                <el-select v-model="gameName.op" placeholder="选择游戏" size="small" style="width: 250px" clearable>
+                    <el-option v-for="op in gameName.ops" :key="op.id" :label="op.name" :value="op" />
                 </el-select>
             </el-col>
-            <el-col :span="5">
+            <el-col :span="6">
                 <span class="font-label">区服名称 </span>
-                <el-select v-model="gameZone" filterable remote placeholder="选择区服" size="small"
-                    :remote-method="searchGameZone" style="width: 170px">
-                    <el-option v-for="gameZoneOp in gameZoneOps" :key="gameZoneOp.id" :label="gameZoneOp.name"
+                <el-select v-model="gameZone.op" placeholder="选择区服" size="small" :remote-method="searchGameZone"
+                    style="width: 150px" filterable remote clearable>
+                    <el-option v-for="gameZoneOp in gameZone.ops" :key="gameZoneOp.id" :label="gameZoneOp.name"
                         :value="gameZoneOp.id" />
                 </el-select>
+                <el-radio-group v-model="bindRadio">
+                    <el-radio value="1" size="small">绑定</el-radio>
+                    <el-radio value="0" size="small">不绑定</el-radio>
+                </el-radio-group>
             </el-col>
-            <el-col :span="7">
+            <el-col :span="6">
                 <span class="font-label">装备道具 </span>
                 <!-- 远程搜索要使用filterable和remote -->
-                <el-select v-model="itemOrEquire" filterable remote placeholder="请输入装备/道具名" size="small"
-                    :remote-method="searchItemOrEquire" :loading="itemOrEquireLoading" style="width: 280px;">
+                <el-select v-model="itemOrEquire" placeholder="请输入装备/道具名" size="small"
+                    :remote-method="searchItemOrEquire" :loading="itemOrEquireLoading" style="width: 250px;" filterable
+                    remote clearable>
                     <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
                         把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
                     <el-option v-for="itemOrEquireOp in itemOrEquireOps" :key="itemOrEquireOp.id"
