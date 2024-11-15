@@ -5,7 +5,7 @@ export default {
     data() {
         return {
             gameName: {
-                op: null,
+                op: {name: '',id: 0},
                 ops: [{ name: '【TT联运】创游传奇', id: 7064 }]
             },
             gameZone: {
@@ -20,13 +20,17 @@ export default {
                 loading: false
             },
             quantity: 1,
-            bindRadio: '1',            
+            bindRadio: '1',
             sender: 'GM',
             mailTitle: '1',
             mailContent: '1',
             sendLable: 'bug补偿',
             sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
             reason: '1',
+            uploadParam: {
+                gameName: ''
+            },
+            fileList: [],
             inputRoles: '',
             outputText: ''
         }
@@ -64,11 +68,14 @@ export default {
                 this.itemOrEq.ops = []
             }
         },
-        addData(){
-            if(this.gameName.op == null){
+        clickUpload(){
+            this.uploadParam.gameName = this.gameName.op.name
+        },
+        addData() {
+            if (this.gameName.op == null) {
                 ElMessage.error('游戏名称不能为空！')
             }
-            if(this.gameZone.op == null){
+            if (this.gameZone.op == null) {
                 ElMessage.error('游戏区服不能为空！')
             }
         }
@@ -76,6 +83,7 @@ export default {
     created() {
         //默认选中第一项
         this.gameName.op = this.gameName.ops[0]
+
     }
 }
 </script>
@@ -90,10 +98,9 @@ export default {
             </el-col>
             <el-col :span="7">
                 <span class="font-label">区服名称 </span>
-                <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small" :remote-method="searchGameZone"
-                    style="width: 150px" filterable remote clearable>
-                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
-                        :value="op.id" />
+                <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
+                    :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
+                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="op.id" />
                 </el-select>
                 <el-radio-group v-model="gameZone.serverRadio">
                     <el-radio value="1" size="small">主服</el-radio>
@@ -104,12 +111,11 @@ export default {
                 <span class="font-label">装备道具 </span>
                 <!-- 远程搜索要使用filterable和remote -->
                 <el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
-                    :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable multiple
-                    remote clearable>
+                    :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable
+                    multiple remote clearable>
                     <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
                         把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
-                    <el-option v-for="op in itemOrEq.ops" :key="op.id"
-                        :label="`${op.name}-${op.id}`" :value="op.id">
+                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="op.id">
                     </el-option>
                 </el-select>
             </el-col>
@@ -155,6 +161,22 @@ export default {
                 <el-input v-model="inputRoles" style="width: 275px" :rows="5" type="textarea" resize="none"
                     placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
+            <el-col :span="12">
+                <el-upload
+                    action="/Jiu96/uploadOrUpdateItem"
+                    accept=".xlsx,.xls"
+                    limit="1"
+                    :file-list="fileList"
+                    :data="uploadParam"
+                >
+                    <el-button type="primary" @click="clickUpload()">上传道具ID表</el-button>
+                    <template #tip>
+                        <div class="el-upload__tip">
+                            <span style="color: red;">先选游戏，再点击上传按钮选道具ID表</span>
+                        </div>
+                    </template>
+                </el-upload>
+            </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="addData">添加数据</el-button>
             </el-col>
@@ -178,7 +200,7 @@ export default {
     font-size: 14px;
 }
 
-.gameZoneSelectBox{
+.gameZoneSelectBox {
     margin-right: 5px;
 }
 
