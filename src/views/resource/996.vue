@@ -6,17 +6,17 @@ export default {
     data() {
         return {
             gameName: {
-                op: {name: '',id: 0},
+                op: '',
                 ops: [{ name: '【TT联运】创游传奇', id: 7064 }]
             },
             gameZone: {
-                op: {name: '',id: 0},
+                op: '',
                 ops: [],
                 serverRadio: '2',
                 loading: false
             },
             itemOrEq: {
-                op: {name: '',id: 0},
+                op: [],
                 ops: [],
                 loading: false
             },
@@ -27,24 +27,28 @@ export default {
             mailContent: '1',
             sendLable: 'bug补偿',
             sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
-            reason: '1',
+            reason: '内部攻沙区',
             uploadUrl: '',
             uploadParam: {
                 gameName: ''
             },
             uploadList: [],
             inputRoles: '',
-            outputText: ''
+            outputText: '',
+            bindRows: [],
+            noBindRows: []
         }
     },
     methods: {
         searchGameZone(query) {
             if (query !== "") {
                 this.gameZone.loading = true;
-                this.$http.get("/Jiu96/selectZone?keyword=" + query + "&gameName=" + this.gameName.op.name + "&gameId=" + this.gameName.op.id + "&queryRange=" + this.gameZone.serverRadio).then((res) => {
-                    /* this.gameZone.ops = res.data.filter((item) => {
-                        return item.name.toLowerCase().indexOf(query.toLowerCase()) > -1
-                    }) */
+                let kv = this.gameName.op.split('-')
+                this.$http.get("/Jiu96/selectZone?keyword=" + query +
+                    "&gameName=" + kv[0] +
+                    "&gameId=" + kv[1] +
+                    "&queryRange=" + this.gameZone.serverRadio
+                ).then((res) => {
                     this.gameZone.ops = res.data
                     this.gameZone.loading = false
                 }).catch((error) => {
@@ -59,8 +63,11 @@ export default {
             // 如果用户输入内容了，就发请求拿数据，远程搜索模糊查询
             if (query !== "") {
                 this.itemOrEq.loading = true;
+                let kv = this.gameName.op.split('-')
                 // 开始拿数据                
-                this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query + "&gameName=" + this.gameName.op.name).then((res) => {
+                this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query
+                    + "&gameName=" + kv[0]
+                ).then((res) => {
                     this.itemOrEq.ops = res.data
                     this.itemOrEq.loading = false
                 }).catch((error) => {
@@ -70,26 +77,77 @@ export default {
                 this.itemOrEq.ops = []
             }
         },
-        clickUpload(){
+        clickUpload() {
             //上传提交参数
             this.uploadParam.gameName = this.gameName.op.name
             this.uploadUrl = axios.defaults.baseURL + '/Jiu96/uploadOrUpdateItem'
         },
         addData() {
-            if (this.gameName.op.name == null || this.gameName.op.name.trim().length === 0) {
+            let hasError = false
+            if (this.gameName.op == null || this.gameName.op.trim().length === 0) {
                 ElMessage.error('游戏名称不能为空！')
+                hasError = true
             }
-            if (this.gameZone.op.name == null || this.gameZone.op.name.trim().length === 0) {
+            if (this.gameZone.op == null || this.gameZone.op.trim().length === 0) {
                 ElMessage.error('游戏区服不能为空！')
+                hasError = true
             }
-            if(this.itemOrEq.op.name == null || this.itemOrEq.op.name.trim().length === 0){
+            if (this.itemOrEq.op == null || this.itemOrEq.op.length === 0) {
                 ElMessage.error('道具装备不能为空！')
+                hasError = true
             }
+            if(this.sender == null || this.sender.trim().length === 0){
+                ElMessage.error('发件人不能为空！')
+                hasError = true
+            }
+            if(this.mailTitle == null || this.mailTitle.trim().length === 0){
+                ElMessage.error('邮件标题不能为空！')
+                hasError = true
+            }
+            if(this.mailContent == null || this.mailContent.trim().length === 0){
+                ElMessage.error('邮件内容不能为空！')
+                hasError = true
+            }
+            if(this.reason == null || this.reason.trim().length === 0){
+                ElMessage.error('申请理由不能为空！')
+                hasError = true
+            }
+            if(this.inputRoles == null || this.inputRoles.trim().length === 0){
+                ElMessage.error('角色列表不能为空！')
+                hasError = true
+            }
+            if(hasError){
+                return
+            }
+            let gameId = this.gameName.op.split('-')[1]
+            let zoneId = this.gameZone.op.split('-')[1]
+            //roleName
+            let bind = this.bindRadio
+            let sender = this.sender
+            let mailTitle = this.mailTitle
+            let mailContent = this.mailContent
+            let sendLable = this.sendLable
+            let reason = this.reason
+            let itemArr = this.itemOrEq.op
+            let itemQty = this.quantity
+            itemArr.forEach(i => {
+                let kv = i.split('-')
+                let itemId = kv[1]
+                let item = itemId + '#' + itemQty
+                if(bind === '1'){
+                    this.bindRows.push(item)
+                }else{
+                    this.noBindRows.push(item)
+                }    
+            })
+            //let outputRow = bind + '\t' + sender + '\t' + mailTitle + '\t' + mailContent + '\t' + sendLable + '\t' + reason
+            
         }
     },
     created() {
         //默认选中第一项
-        this.gameName.op = this.gameName.ops[0]
+        let ops = this.gameName.ops[0]
+        this.gameName.op = ops.name + '-' + ops.id
 
     }
 }
@@ -100,14 +158,14 @@ export default {
             <el-col :span="5">
                 <span class="font-label">游戏名称 </span>
                 <el-select v-model="gameName.op" placeholder="选择游戏" size="small" style="width: 250px" clearable>
-                    <el-option v-for="op in gameName.ops" :key="op.id" :label="op.name" :value="op" />
+                    <el-option v-for="op in gameName.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`" />
                 </el-select>
             </el-col>
             <el-col :span="7">
                 <span class="font-label">区服名称 </span>
                 <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
                     :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
-                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="op" />
+                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`" />
                 </el-select>
                 <el-radio-group v-model="gameZone.serverRadio">
                     <el-radio value="1" size="small">主服</el-radio>
@@ -116,13 +174,10 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">装备道具 </span>
-                <!-- 远程搜索要使用filterable和remote -->
                 <el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
                     :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable
                     multiple remote clearable collapse-tags>
-                    <!-- remote-method封装好的钩子函数。当用户在输入框中输入内容的时候，会触发这个函数的执行，
-                        把输入框对应的值作为参数带给回调函数，loading的意思就是远程搜索的时候等待的时间，即：加载中-->
-                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="op">
+                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`">
                     </el-option>
                 </el-select>
             </el-col>
@@ -169,15 +224,8 @@ export default {
                     placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
             <el-col :span="6">
-                <el-upload
-                    name="uploadFile"
-                    accept=".xlsx,.xls"
-                    multiple
-                    limit="2"
-                    :file-list="uploadList"
-                    :action="uploadUrl"
-                    :data="uploadParam"
-                >
+                <el-upload name="uploadFile" accept=".xlsx,.xls" multiple limit="2" :file-list="uploadList"
+                    :action="uploadUrl" :data="uploadParam">
                     <el-button type="primary" @click="clickUpload()">上传道具ID表</el-button>
                     <template #tip>
                         <div class="el-upload__tip">
