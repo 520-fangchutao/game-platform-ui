@@ -36,7 +36,9 @@ export default {
             inputRoles: '',
             outputText: '',
             bindRows: [],
-            noBindRows: []
+            bindRow: [],
+            noBindRows: [],
+            noBindRow: []
         }
     },
     methods: {
@@ -122,7 +124,7 @@ export default {
             let gameId = this.gameName.op.split('-')[1]
             let zoneId = this.gameZone.op.split('-')[1]
             //roleName
-            let bind = this.bindRadio
+            let bindStatus = this.bindRadio
             let sender = this.sender
             let mailTitle = this.mailTitle
             let mailContent = this.mailContent
@@ -130,18 +132,47 @@ export default {
             let reason = this.reason
             let itemArr = this.itemOrEq.op
             let itemQty = this.quantity
+            let outputRow = [bindStatus,sender,mailTitle,mailContent,sendLable,reason]
+            let outputRowStr = outputRow.join('\t')
+            let outputRowStrs = []
+            //上次记录最后行
+            this.outputText.lastIndexOf
             itemArr.forEach(i => {
                 let kv = i.split('-')
                 let itemId = kv[1]
                 let item = itemId + '#' + itemQty
-                if(bind === '1'){
-                    this.bindRows.push(item)
+                if(bindStatus === '1'){
+                    if(this.bindRow.length === 10){
+                        this.bindRows.push(this.bindRow)
+                        this.bindRow = []
+                    }
+                    this.bindRow.push(item)
                 }else{
+                    if(this.nobindRow.length === 10){
+                        this.nobindRows.push(this.nobindRow)
+                        this.nobindRow = []
+                    }
                     this.noBindRows.push(item)
                 }    
             })
-            //let outputRow = bind + '\t' + sender + '\t' + mailTitle + '\t' + mailContent + '\t' + sendLable + '\t' + reason
-            
+            if(bindStatus === '1'){
+                this.bindRows.forEach(itemRow => {
+                    let itemRowStr = itemRow.join(';')
+                    outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
+                })
+            }else{
+                this.nobindRows.forEach(itemRow => {
+                    let itemRowStr = itemRow.join(';')
+                    outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
+                })
+            }
+            let roleNames = this.inputRoles.split('\n')
+            roleNames.forEach(roleName => {
+                let gzr = gameId + '\t' + zoneId + '\t' + roleName
+                outputRowStrs.forEach(row => {
+                    this.outputText.concat(gzr + row + '\n')
+                })
+            })
         }
     },
     created() {
