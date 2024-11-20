@@ -34,14 +34,54 @@ export default {
             },
             uploadList: [],
             inputRoles: '',
-            outputText: '',
-            bindRows: [],
-            bindRow: [],
-            noBindRows: [],
-            noBindRow: []
+            outputText: ''
         }
     },
     methods: {
+        generateBatchRows(itemThreshold) {
+            //开始生成数据输出行方法
+            let gameId = this.gameName.op.split('-')[1]
+            let zoneId = this.gameZone.op.split('-')[1]
+            //此处角色名
+            let bindStatus = this.bindRadio
+            let sender = this.sender
+            let mailTitle = this.mailTitle
+            let mailContent = this.mailContent
+            let sendLable = this.sendLable
+            let reason = this.reason
+            let itemArr = this.itemOrEq.op
+            let itemQty = this.quantity
+
+            //let itemThreshold = 10
+            let itemRow = []
+            let itemRows = []
+            itemArr.forEach(i => {
+                let kv = i.split('-')
+                let itemId = kv[1]
+                let item = itemId + '#' + itemQty
+                if (itemRow.length >= itemThreshold) {
+                    itemRows.push(itemRow)
+                    itemRow = []
+                }
+                itemRow.push(item)
+            })
+            itemRows.push(itemRow)
+
+            let outputRow = [bindStatus, sender, mailTitle, mailContent, sendLable, reason]
+            let outputRowStr = outputRow.join('\t')
+            let outputRowStrs = []
+            itemRows.forEach(itemRow => {
+                let itemRowStr = itemRow.join(';')
+                outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
+            })
+            let roleNames = this.inputRoles.split('\n')
+            roleNames.forEach(roleName => {
+                let gzr = gameId + '\t' + zoneId + '\t' + roleName
+                outputRowStrs.forEach(row => {
+                    this.outputText+=(gzr + '\t' + row + '\n')
+                })
+            })
+        },
         searchGameZone(query) {
             if (query !== "") {
                 this.gameZone.loading = true;
@@ -98,81 +138,45 @@ export default {
                 ElMessage.error('道具装备不能为空！')
                 hasError = true
             }
-            if(this.sender == null || this.sender.trim().length === 0){
+            if (this.sender == null || this.sender.trim().length === 0) {
                 ElMessage.error('发件人不能为空！')
                 hasError = true
             }
-            if(this.mailTitle == null || this.mailTitle.trim().length === 0){
+            if (this.mailTitle == null || this.mailTitle.trim().length === 0) {
                 ElMessage.error('邮件标题不能为空！')
                 hasError = true
             }
-            if(this.mailContent == null || this.mailContent.trim().length === 0){
+            if (this.mailContent == null || this.mailContent.trim().length === 0) {
                 ElMessage.error('邮件内容不能为空！')
                 hasError = true
             }
-            if(this.reason == null || this.reason.trim().length === 0){
+            if (this.reason == null || this.reason.trim().length === 0) {
                 ElMessage.error('申请理由不能为空！')
                 hasError = true
             }
-            if(this.inputRoles == null || this.inputRoles.trim().length === 0){
+            if (this.inputRoles == null || this.inputRoles.trim().length === 0) {
                 ElMessage.error('角色列表不能为空！')
                 hasError = true
             }
-            if(hasError){
+            if (hasError) {
                 return
             }
-            let gameId = this.gameName.op.split('-')[1]
-            let zoneId = this.gameZone.op.split('-')[1]
-            //roleName
-            let bindStatus = this.bindRadio
-            let sender = this.sender
-            let mailTitle = this.mailTitle
-            let mailContent = this.mailContent
-            let sendLable = this.sendLable
-            let reason = this.reason
-            let itemArr = this.itemOrEq.op
-            let itemQty = this.quantity
-            let outputRow = [bindStatus,sender,mailTitle,mailContent,sendLable,reason]
-            let outputRowStr = outputRow.join('\t')
-            let outputRowStrs = []
-            //上次记录最后行
-            this.outputText.lastIndexOf
-            itemArr.forEach(i => {
-                let kv = i.split('-')
-                let itemId = kv[1]
-                let item = itemId + '#' + itemQty
-                if(bindStatus === '1'){
-                    if(this.bindRow.length === 10){
-                        this.bindRows.push(this.bindRow)
-                        this.bindRow = []
-                    }
-                    this.bindRow.push(item)
-                }else{
-                    if(this.nobindRow.length === 10){
-                        this.nobindRows.push(this.nobindRow)
-                        this.nobindRow = []
-                    }
-                    this.noBindRows.push(item)
-                }    
-            })
-            if(bindStatus === '1'){
-                this.bindRows.forEach(itemRow => {
-                    let itemRowStr = itemRow.join(';')
-                    outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
-                })
-            }else{
-                this.nobindRows.forEach(itemRow => {
-                    let itemRowStr = itemRow.join(';')
-                    outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
-                })
-            }
-            let roleNames = this.inputRoles.split('\n')
-            roleNames.forEach(roleName => {
-                let gzr = gameId + '\t' + zoneId + '\t' + roleName
-                outputRowStrs.forEach(row => {
-                    this.outputText.concat(gzr + row + '\n')
-                })
-            })
+
+            this.generateBatchRows(10)
+            //达到满道具（10个）行及以上处理
+            // if (this.outputText.length >= 79) {
+            //     let count = this.outputText.substring(this.outputText.length - 79, this.outputText.length - 1).match(new RegExp(`#`, `g`)).length
+            //     //不满足10个道具，追加操作
+            //     if (count < 10) {
+
+            //     } else {//满足10个道具，另起新行
+
+            //     }
+            // } else {
+            //     //未达到一行满道具（10个）行
+            // }
+
+
         }
     },
     created() {
@@ -189,14 +193,16 @@ export default {
             <el-col :span="5">
                 <span class="font-label">游戏名称 </span>
                 <el-select v-model="gameName.op" placeholder="选择游戏" size="small" style="width: 250px" clearable>
-                    <el-option v-for="op in gameName.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`" />
+                    <el-option v-for="op in gameName.ops" :key="op.id" :label="`${op.name}-${op.id}`"
+                        :value="`${op.name}-${op.id}`" />
                 </el-select>
             </el-col>
             <el-col :span="7">
                 <span class="font-label">区服名称 </span>
                 <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
                     :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
-                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`" />
+                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
+                        :value="`${op.name}-${op.id}`" />
                 </el-select>
                 <el-radio-group v-model="gameZone.serverRadio">
                     <el-radio value="1" size="small">主服</el-radio>
@@ -208,7 +214,8 @@ export default {
                 <el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
                     :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable
                     multiple remote clearable collapse-tags>
-                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`" :value="`${op.name}-${op.id}`">
+                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`"
+                        :value="`${op.name}-${op.id}`">
                     </el-option>
                 </el-select>
             </el-col>
