@@ -38,6 +38,13 @@ export default {
         }
     },
     methods: {
+        handleScroll(event) {
+            const target = event.target;
+            // 检查是否滚动到底部，可以根据实际情况调整阈值
+            if (target.scrollHeight - target.scrollTop <= target.clientHeight) {
+                console.log('滚动底部')
+            }
+        },
         generateBatchRows(itemThreshold) {
             //开始生成数据输出行方法
             let gameId = this.gameName.op.split('-')[1]
@@ -78,7 +85,7 @@ export default {
             roleNames.forEach(roleName => {
                 let gzr = gameId + '\t' + zoneId + '\t' + roleName
                 outputRowStrs.forEach(row => {
-                    this.outputText+=(gzr + '\t' + row + '\n')
+                    this.outputText += (gzr + '\t' + row + '\n')
                 })
             })
         },
@@ -110,7 +117,10 @@ export default {
                 this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query
                     + "&gameName=" + kv[0]
                 ).then((res) => {
-                    this.itemOrEq.ops = res.data
+                    //this.itemOrEq.ops = res.data
+                    this.itemOrEq.ops = res.data.map((op) => {
+                        return { value: `${op.name}-${op.id}`, label: `${op.name}-${op.id}` }
+                    })
                     this.itemOrEq.loading = false
                 }).catch((error) => {
                     console.log('错误输出：', error)
@@ -163,19 +173,6 @@ export default {
             }
 
             this.generateBatchRows(10)
-            //达到满道具（10个）行及以上处理
-            // if (this.outputText.length >= 79) {
-            //     let count = this.outputText.substring(this.outputText.length - 79, this.outputText.length - 1).match(new RegExp(`#`, `g`)).length
-            //     //不满足10个道具，追加操作
-            //     if (count < 10) {
-
-            //     } else {//满足10个道具，另起新行
-
-            //     }
-            // } else {
-            //     //未达到一行满道具（10个）行
-            // }
-
 
         }
     },
@@ -211,13 +208,23 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">装备道具 </span>
-                <el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
+                <!--<el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
                     :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable
                     multiple remote clearable collapse-tags>
                     <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`"
                         :value="`${op.name}-${op.id}`">
                     </el-option>
-                </el-select>
+                </el-select>-->
+                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 250px;" multiple filterable remote
+                    collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
+                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名" @scroll="handleScroll">
+                    <template #default="{ item }">
+                        <span style="margin-right: 8px">{{ item.label }}</span>
+                        <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
+                            {{ item.value }}
+                        </span> -->
+                    </template>
+                </el-select-v2>
             </el-col>
             <el-col :span="6">
                 <span class="font-label">数量 </span>
