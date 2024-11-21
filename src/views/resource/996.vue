@@ -192,8 +192,41 @@ export default {
         },
         optimizeData() {
             let rows = this.outputText.split('\n')
-            let index = this.recursionIndex(rows[0],0,9,'\t')
-            console.log(index,'<'+rows[0].substring(0,index)+'>')
+            let sourceRows = []
+            let distinctRows = []
+            rows.forEach(row => {
+                row = row.trim()
+                if (row.length !== 0) {
+                    let index = this.recursionIndex(row, 0, 9, '\t')
+                    let key = row.substring(0, index + 1)
+                    sourceRows.push(key)
+                }
+            })
+            let rowStrs = []
+            sourceRows.forEach(function (self, index, arr) {
+                arr.indexOf(self) === index ? distinctRows.push(self) : null;
+            });
+
+            distinctRows.forEach((key, keyIdx) => {
+                let first = true
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].includes(key)) {
+                        let value = rows[i].substring(key.length)
+                        if (first) {
+                            rowStrs.push(key + value)
+                            first = false
+                        } else {
+                            // let matches = rowStrs[keyIdx].match(new RegExp(`#`, `g`))
+                            // let count = matches ? matches.length : 0;
+                            rowStrs[keyIdx] = rowStrs[keyIdx] + ';' + value
+                        }
+                        rows.splice(i, 1)
+                        i--
+                    }
+                }
+            })
+
+            this.outputText = rowStrs.join('\n') + '\n'
         }
     },
     created() {
@@ -248,7 +281,7 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">数量 </span>
-                <el-input v-model="quantity" style="width: 172px" size="small" />
+                <el-input v-model="quantity" type="number" style="width: 172px" size="small" />
             </el-col>
         </el-row>
         <el-row>
