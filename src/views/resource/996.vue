@@ -131,8 +131,16 @@ export default {
         },
         clickUpload() {
             //上传提交参数
-            this.uploadParam.gameName = this.gameName.op.name
+            this.uploadParam.gameName = this.gameName.op.split('-')[0]
             this.uploadUrl = axios.defaults.baseURL + '/Jiu96/uploadOrUpdateItem'
+        },
+        uploadSuccess(resp) {
+            //let respObj = JSON.parse(resp)
+            if (resp.code === 'S') {
+                ElMessage.success(resp.msg)
+            } else {
+                ElMessage.error(resp.msg)
+            }
         },
         addData() {
             let hasError = false
@@ -174,6 +182,18 @@ export default {
 
             this.generateBatchRows(10)
 
+        },
+        recursionIndex(row, begin, limit, splitChar) {
+            let index = row.indexOf(splitChar, begin)
+            if (limit === 1) {
+                return index
+            }
+            return this.recursionIndex(row, index + 1, limit - 1, splitChar)
+        },
+        optimizeData() {
+            let rows = this.outputText.split('\n')
+            let index = this.recursionIndex(rows[0],0,9,'\t')
+            console.log(index,'<'+rows[0].substring(0,index)+'>')
         }
     },
     created() {
@@ -270,7 +290,7 @@ export default {
             </el-col>
             <el-col :span="6">
                 <el-upload name="uploadFile" accept=".xlsx,.xls" multiple limit="2" :file-list="uploadList"
-                    :action="uploadUrl" :data="uploadParam">
+                    :action="uploadUrl" :data="uploadParam" :on-success="uploadSuccess">
                     <el-button type="primary" @click="clickUpload()">上传道具ID表</el-button>
                     <template #tip>
                         <div class="el-upload__tip">
@@ -283,12 +303,15 @@ export default {
                 <el-button type="primary" @click="addData">添加数据</el-button>
             </el-col>
             <el-col :span="2">
+                <el-button type="primary" @click="optimizeData">精简数据</el-button>
+            </el-col>
+            <el-col :span="2">
                 <el-button type="primary">提交数据</el-button>
             </el-col>
         </el-row>
         <el-row>
             <el-col :span="24">
-                <el-input v-model="outputText" style="width: 800px" :rows="10" type="textarea" resize="none"
+                <el-input v-model="outputText" style="width: 1500px" :rows="10" type="textarea" resize="none"
                     placeholder="输出批量申请行" />
             </el-col>
         </el-row>
@@ -304,6 +327,14 @@ export default {
 
 .gameZoneSelectBox {
     margin-right: 5px;
+}
+
+.el-select__tags-text {
+    display: inline-block;
+    width: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .el-row {
