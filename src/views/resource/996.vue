@@ -183,12 +183,25 @@ export default {
             this.generateBatchRows(10)
 
         },
-        recursionIndex(row, begin, limit, splitChar) {
-            let index = row.indexOf(splitChar, begin)
-            if (limit === 1) {
-                return index
+        recursionExceedPart(exceedPartStrs,e,exceedIdx){
+            let exceedPartStr = e.substring(exceedIdx + 1)
+            let count = this.$commUtil.countChar(exceedPartStr, '#')
+            if(count <= 10){
+                exceedPartStrs.push(exceedPartStr)
+                return
+            }else{
+                let exceedIdx = this.$commUtil.recursionIndex(exceedPartStrs, 0, 10, ';')
+                return recursionExceedPart(exceedPartStrs,)
             }
-            return this.recursionIndex(row, index + 1, limit - 1, splitChar)
+        },
+        procExceedPart(e) {
+            let exceedPartStrs = []
+            let tIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
+            let headerPartStr = e.substring(0, tIdx + 1)
+            let exceedIdx = this.$commUtil.recursionIndex(e, 0, 10, ';')
+            let normalPartStr = e.substring(tIdx + 1, exceedIdx)
+            exceedPartStrs.push(headerPartStr, normalPartStr)
+            this.recursionExceedPart(exceedPartStrs,e,exceedIdx)
         },
         optimizeData() {
             let rows = this.outputText.split('\n')
@@ -197,7 +210,7 @@ export default {
             rows.forEach(row => {
                 row = row.trim()
                 if (row.length !== 0) {
-                    let index = this.recursionIndex(row, 0, 9, '\t')
+                    let index = this.$commUtil.recursionIndex(row, 0, 9, '\t')
                     let key = row.substring(0, index + 1)
                     sourceRows.push(key)
                 }
@@ -207,6 +220,7 @@ export default {
                 arr.indexOf(self) === index ? distinctRows.push(self) : null;
             });
 
+            //合并同类项
             distinctRows.forEach((key, keyIdx) => {
                 let first = true
                 for (let i = 0; i < rows.length; i++) {
@@ -216,14 +230,27 @@ export default {
                             rowStrs.push(key + value)
                             first = false
                         } else {
-                            // let matches = rowStrs[keyIdx].match(new RegExp(`#`, `g`))
-                            // let count = matches ? matches.length : 0;
                             rowStrs[keyIdx] = rowStrs[keyIdx] + ';' + value
                         }
                         rows.splice(i, 1)
                         i--
                     }
                 }
+            })
+
+            //分离超长数据，跟正常数据
+            let exceedLenStrs = []
+            for (let i = 0; i < rowStrs.length; i++) {
+                let count = this.$commUtil.countChar(rowStrs[i], '#')
+                if (count > 10) {
+                    exceedLenStrs.push(rowStrs[i])
+                    rowStrs.splice(i, 1)
+                    i--
+                }
+            }
+            //处理超长数据
+            exceedLenStrs.forEach(e => {
+
             })
 
             this.outputText = rowStrs.join('\n') + '\n'

@@ -5,6 +5,7 @@ import store from './store'
 import ElementPlus from 'element-plus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios';
+import * as common from './utils/common'
 import 'element-plus/dist/index.css'
 
 // 配置全局URL
@@ -14,6 +15,7 @@ axios.defaults.baseURL = 'http://localhost:8083';
 const app = createApp(App)
 // 挂载axios到全局
 app.config.globalProperties.$http = axios
+app.config.globalProperties.$commUtil = common
 // 注册组件icon
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
