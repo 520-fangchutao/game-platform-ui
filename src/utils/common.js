@@ -12,3 +12,9 @@ export function recursionIndex(row, begin, limit, splitChar) {
     return this.recursionIndex(row, index + 1, limit - 1, splitChar)
 }
 
+export function distinctArr(srcArr,discArr){
+    srcArr.forEach(function (self, index, arr) {
+        arr.indexOf(self) === index ? discArr.push(self) : null;
+    });
+}
+

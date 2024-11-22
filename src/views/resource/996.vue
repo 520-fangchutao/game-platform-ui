@@ -183,25 +183,25 @@ export default {
             this.generateBatchRows(10)
 
         },
-        recursionExceedPart(exceedPartStrs,e,exceedIdx){
-            let exceedPartStr = e.substring(exceedIdx + 1)
-            let count = this.$commUtil.countChar(exceedPartStr, '#')
-            if(count <= 10){
-                exceedPartStrs.push(exceedPartStr)
-                return
-            }else{
-                let exceedIdx = this.$commUtil.recursionIndex(exceedPartStrs, 0, 10, ';')
-                return recursionExceedPart(exceedPartStrs,)
-            }
-        },
         procExceedPart(e) {
-            let exceedPartStrs = []
-            let tIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
-            let headerPartStr = e.substring(0, tIdx + 1)
-            let exceedIdx = this.$commUtil.recursionIndex(e, 0, 10, ';')
-            let normalPartStr = e.substring(tIdx + 1, exceedIdx)
-            exceedPartStrs.push(headerPartStr, normalPartStr)
-            this.recursionExceedPart(exceedPartStrs,e,exceedIdx)
+            let count = this.$commUtil.countChar(e, '#')
+            let splitCount = Math.floor(count / 10)
+            if (count % 10 === 0) {
+                splitCount = splitCount - 1
+            }
+            let headIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
+            let headStr = e.substring(0,headIdx+1)
+            let splitStr = e.substring(headIdx+1)
+            let splitStrs = []
+            for (let i = 0; i < splitCount; i++) {
+                let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, 10, ';') + 1
+                let splitPart = splitStr.substring(0, splitIdx)
+                splitStrs.push(splitPart)
+                splitStr = splitStr.substring(splitIdx)
+            }
+            splitStrs.push(splitStr)
+            splitStrs.push(headStr)
+            return splitStrs
         },
         optimizeData() {
             let rows = this.outputText.split('\n')
@@ -216,9 +216,7 @@ export default {
                 }
             })
             let rowStrs = []
-            sourceRows.forEach(function (self, index, arr) {
-                arr.indexOf(self) === index ? distinctRows.push(self) : null;
-            });
+            this.$commUtil.distinctArr(sourceRows, distinctRows)
 
             //合并同类项
             distinctRows.forEach((key, keyIdx) => {
@@ -248,11 +246,22 @@ export default {
                     i--
                 }
             }
-            //处理超长数据
+            //处理超长数据为正常数据
             exceedLenStrs.forEach(e => {
-
+                let splitStrs = this.procExceedPart(e)
+                let pos = splitStrs.length - 1
+                let headStr = splitStrs[pos]
+                splitStrs.splice(pos,1)
+                pos = splitStrs.length - 1
+                splitStrs.forEach((sp,idx) => {
+                    if(idx === pos){
+                        rowStrs.push(headStr + sp)
+                    }else{
+                        rowStrs.push(headStr + sp.substring(0,sp.length-1))
+                    }
+                })
             })
-
+            ElMessage.success('精简数据成功！')
             this.outputText = rowStrs.join('\n') + '\n'
         }
     },
