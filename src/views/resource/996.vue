@@ -190,8 +190,8 @@ export default {
                 splitCount = splitCount - 1
             }
             let headIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
-            let headStr = e.substring(0,headIdx+1)
-            let splitStr = e.substring(headIdx+1)
+            let headStr = e.substring(0, headIdx + 1)
+            let splitStr = e.substring(headIdx + 1)
             let splitStrs = []
             for (let i = 0; i < splitCount; i++) {
                 let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, 10, ';') + 1
@@ -251,18 +251,30 @@ export default {
                 let splitStrs = this.procExceedPart(e)
                 let pos = splitStrs.length - 1
                 let headStr = splitStrs[pos]
-                splitStrs.splice(pos,1)
+                splitStrs.splice(pos, 1)
                 pos = splitStrs.length - 1
-                splitStrs.forEach((sp,idx) => {
-                    if(idx === pos){
+                splitStrs.forEach((sp, idx) => {
+                    if (idx === pos) {
                         rowStrs.push(headStr + sp)
-                    }else{
-                        rowStrs.push(headStr + sp.substring(0,sp.length-1))
+                    } else {
+                        rowStrs.push(headStr + sp.substring(0, sp.length - 1))
                     }
                 })
             })
             ElMessage.success('精简数据成功！')
             this.outputText = rowStrs.join('\n') + '\n'
+        },
+        submitBatchData() {
+            let gameName = this.gameName.op.split('-')[0];
+            let batchReqText = this.outputText;
+            this.$http.post(
+                "/Jiu96/batchItemSend",
+                {gameName: gameName,batchReqText: batchReqText}
+            ).then((res) => {
+                console.log(res)
+            }).catch((error) => {
+                console.log('错误输出：', error)
+            })
         }
     },
     created() {
@@ -375,12 +387,12 @@ export default {
                 <el-button type="primary" @click="optimizeData">精简数据</el-button>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary">提交数据</el-button>
+                <el-button type="primary" @click="submitBatchData">提交数据</el-button>
             </el-col>
         </el-row>
         <el-row>
             <el-col :span="24">
-                <el-input v-model="outputText" style="width: 1500px" :rows="10" type="textarea" resize="none"
+                <el-input v-model="outputText" style="width: 1500px" :rows="30" type="textarea" resize="none"
                     placeholder="输出批量申请行" />
             </el-col>
         </el-row>
