@@ -2,18 +2,18 @@
 // 解决ERROR ResizeObserver loop completed with undelivered notifications.
 // 重写ResizeObserver的构造函数，并在其中定义并调用防抖函数
 window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
-  constructor(callback) {
-    let timer = null
-    const debouncedCallback = function () {
-      let context = this
-      let args = arguments
-      clearTimeout(timer)
-      timer = setTimeout(function () {
-        callback.apply(context, args)
-      }, 16)
+    constructor(callback) {
+        let timer = null
+        const debouncedCallback = function () {
+            let context = this
+            let args = arguments
+            clearTimeout(timer)
+            timer = setTimeout(function () {
+                callback.apply(context, args)
+            }, 16)
+        }
+        super(debouncedCallback)
     }
-    super(debouncedCallback)
-  }
 }
 </script>
 <template>
@@ -25,7 +25,9 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
                     <el-menu default-active="1" router="true">
                         <el-sub-menu index="1">
                             <template #title>
-                                <el-icon><Present /></el-icon>
+                                <el-icon>
+                                    <Present />
+                                </el-icon>
                                 <span>资源发放</span>
                             </template>
                             <el-menu-item index="/resource/996">996平台</el-menu-item>
@@ -49,7 +51,7 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
                     </el-menu>
                 </el-aside>
                 <el-main>
-                    <router-view/>
+                    <router-view />
                 </el-main>
             </el-container>
         </el-container>
@@ -60,9 +62,12 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
 .common-layout {
     height: 100vh;
 }
-.el-container{
+
+.el-container {
     height: 100%;
+    overflow: hidden;
 }
+
 .el-header {
     background-color: #4091ff;
     line-height: 60px;
@@ -70,14 +75,8 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
     color: #fff;
     font-weight: bold;
 }
+
 .el-aside {
     border: 1px solid grey;
 }
-// :deep(.el-menu) {
-//     background-color: #4091ff;
-// }
-
-// .el-menu-item {
-//     color: #fff;
-// }
 </style>

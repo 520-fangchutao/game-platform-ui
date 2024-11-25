@@ -34,17 +34,11 @@ export default {
             },
             uploadList: [],
             inputRoles: '',
-            outputText: ''
+            outputText: '',
+            batchProcCode: ''
         }
     },
     methods: {
-        handleScroll(event) {
-            const target = event.target;
-            // 检查是否滚动到底部，可以根据实际情况调整阈值
-            if (target.scrollHeight - target.scrollTop <= target.clientHeight) {
-                console.log('滚动底部')
-            }
-        },
         generateBatchRows(itemThreshold) {
             //开始生成数据输出行方法
             let gameId = this.gameName.op.split('-')[1]
@@ -93,15 +87,21 @@ export default {
             if (query !== "") {
                 this.gameZone.loading = true;
                 let kv = this.gameName.op.split('-')
-                this.$http.get("/Jiu96/selectZone?keyword=" + query +
+                this.$http.get("/Jiu96/queryZones?keyword=" + query +
                     "&gameName=" + kv[0] +
                     "&gameId=" + kv[1] +
                     "&queryRange=" + this.gameZone.serverRadio
                 ).then((res) => {
-                    this.gameZone.ops = res.data
+                    let respData = res.data
+                    if(respData.code === 'S'){
+                        this.gameZone.ops = respData.data
+                    }else{
+                        ElMessage.error(respData.msg)
+                    }
                     this.gameZone.loading = false
                 }).catch((error) => {
-                    console.log('错误输出：', error)
+                    console.log(error)
+                    ElMessage.error('意料之外的错误：' + error)
                 })
             } else {
                 this.gameZone.ops = []
@@ -204,6 +204,10 @@ export default {
             return splitStrs
         },
         optimizeData() {
+            if(this.outputText.trim().length === 0){
+                ElMessage.info('没有可压缩的数据行！')
+                return
+            }
             let rows = this.outputText.split('\n')
             let sourceRows = []
             let distinctRows = []
@@ -261,19 +265,54 @@ export default {
                     }
                 })
             })
-            ElMessage.success('精简数据成功！')
+            ElMessage.success('压缩数据成功！')
             this.outputText = rowStrs.join('\n') + '\n'
         },
         submitBatchData() {
+            if(this.outputText.trim().length === 0){
+                ElMessage.info('没有可供提交的数据行！')
+                return
+            }
             let gameName = this.gameName.op.split('-')[0];
             let batchReqText = this.outputText;
             this.$http.post(
                 "/Jiu96/batchItemSend",
-                {gameName: gameName,batchReqText: batchReqText}
+                { gameName: gameName, batchReqText: batchReqText }
             ).then((res) => {
-                console.log(res)
+                let respData = res.data
+                if (respData.code === 'S') {
+                    let code = respData.data
+                    this.batchProcCode = code
+                    ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
+                } else {
+                    ElMessage.error(respData.msg)
+                }
             }).catch((error) => {
-                console.log('错误输出：', error)
+                console.error(error)
+                ElMessage.error('意料之外的错误：' + error)
+            })
+        },
+        queryBatchResult() {
+            if (this.batchProcCode.length === 0) {
+                ElMessage.info('该页面暂无批量申请记录！')
+                return
+            }
+            let gameName = this.gameName.op.split('-')[0];
+            let code = this.batchProcCode
+            this.$http.get(
+                `/Jiu96/queryBatchMailStatus?gameName=${gameName}&code=${code}`
+            ).then((res) => {
+                let respData = res.data
+                if (respData.code === 'S') {
+                    let data = respData.data
+                    //，current:${data.current}，取消:${data.isCancel}，错误:${data.isError}
+                    ElMessage.success(`处理码:${this.batchProcCode}，总数:${data.total}，成功数:${data.successCount}，失败数:${data.errorCount}`)
+                } else {
+                    ElMessage.error(respData.msg)
+                }
+            }).catch((error) => {
+                console.log(error)
+                ElMessage.error('意料之外的错误：' + error)
             })
         }
     },
@@ -318,7 +357,7 @@ export default {
                 </el-select>-->
                 <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 250px;" multiple filterable remote
                     collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
-                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名" @scroll="handleScroll">
+                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名">
                     <template #default="{ item }">
                         <span style="margin-right: 8px">{{ item.label }}</span>
                         <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
@@ -384,10 +423,13 @@ export default {
                 <el-button type="primary" @click="addData">添加数据</el-button>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary" @click="optimizeData">精简数据</el-button>
+                <el-button type="primary" @click="optimizeData">压缩数据</el-button>
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="submitBatchData">提交数据</el-button>
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary" @click="queryBatchResult">处理结果</el-button>
             </el-col>
         </el-row>
         <el-row>

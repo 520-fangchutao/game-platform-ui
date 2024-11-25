@@ -17,4 +17,3 @@ export function distinctArr(srcArr,discArr){
         arr.indexOf(self) === index ? discArr.push(self) : null;
     });
 }
-
