@@ -35,7 +35,9 @@ export default {
             uploadList: [],
             inputRoles: '',
             outputText: '',
-            batchProcCode: ''
+            batchProcCode: '',
+            dialogVisible: false,
+            designName: ''
         }
     },
     methods: {
@@ -93,9 +95,9 @@ export default {
                     "&queryRange=" + this.gameZone.serverRadio
                 ).then((res) => {
                     let respData = res.data
-                    if(respData.code === 'S'){
+                    if (respData.code === 'S') {
                         this.gameZone.ops = respData.data
-                    }else{
+                    } else {
                         ElMessage.error(respData.msg)
                     }
                     this.gameZone.loading = false
@@ -117,29 +119,48 @@ export default {
                 this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query
                     + "&gameName=" + kv[0]
                 ).then((res) => {
-                    //this.itemOrEq.ops = res.data
-                    this.itemOrEq.ops = res.data.map((op) => {
-                        return { value: `${op.name}-${op.id}`, label: `${op.name}-${op.id}` }
-                    })
+                    let respData = res.data
+                    if (respData.code === 'S') {
+                        this.itemOrEq.ops = respData.data.map((op) => {
+                            return { value: `${op.name}-${op.id}`, label: `${op.name}-${op.id}` }
+                        })
+                    } else {
+                        ElMessage.error(respData.msg)
+                    }
                     this.itemOrEq.loading = false
                 }).catch((error) => {
-                    console.log('错误输出：', error)
+                    console.log('意料之外的错误：', error)
                 })
             } else {
                 this.itemOrEq.ops = []
             }
         },
+        clearAllItems() {
+            let gameName = this.gameName.op.split('-')[0];
+            this.$http.get(
+                `/Jiu96/clearAll?gameName=${gameName}`
+            ).then((res) => {
+                let respData = res.data
+                if (respData.code === 'S') {
+                    ElMessage.success(respData.msg)
+                } else {
+                    ElMessage.error(respData.msg)
+                }
+            }).catch((error) => {
+                console.log(error)
+                ElMessage.error('意料之外的错误：' + error)
+            })
+        },
         clickUpload() {
             //上传提交参数
             this.uploadParam.gameName = this.gameName.op.split('-')[0]
-            this.uploadUrl = axios.defaults.baseURL + '/Jiu96/uploadOrUpdateItem'
+            this.uploadUrl = axios.defaults.baseURL + '/Jiu96/uploadItems'
         },
-        uploadSuccess(resp) {
-            //let respObj = JSON.parse(resp)
-            if (resp.code === 'S') {
-                ElMessage.success(resp.msg)
+        uploadSuccess(respData) {
+            if (respData.code === 'S') {
+                ElMessage.success(respData.msg)
             } else {
-                ElMessage.error(resp.msg)
+                ElMessage.error(respData.msg)
             }
         },
         addData() {
@@ -204,7 +225,7 @@ export default {
             return splitStrs
         },
         optimizeData() {
-            if(this.outputText.trim().length === 0){
+            if (this.outputText.trim().length === 0) {
                 ElMessage.info('没有可压缩的数据行！')
                 return
             }
@@ -269,7 +290,7 @@ export default {
             this.outputText = rowStrs.join('\n') + '\n'
         },
         submitBatchData() {
-            if(this.outputText.trim().length === 0){
+            if (this.outputText.trim().length === 0) {
                 ElMessage.info('没有可供提交的数据行！')
                 return
             }
@@ -328,14 +349,14 @@ export default {
     <div class="mailReqBox">
         <el-row>
             <el-col :span="5">
-                <span class="font-label">游戏名称 </span>
+                <span class="font-label">游戏名称</span>
                 <el-select v-model="gameName.op" placeholder="选择游戏" size="small" style="width: 250px" clearable>
                     <el-option v-for="op in gameName.ops" :key="op.id" :label="`${op.name}-${op.id}`"
                         :value="`${op.name}-${op.id}`" />
                 </el-select>
             </el-col>
-            <el-col :span="7">
-                <span class="font-label">区服名称 </span>
+            <el-col :span="6">
+                <span class="font-label">区服名称</span>
                 <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
                     :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
                     <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
@@ -346,16 +367,9 @@ export default {
                     <el-radio value="2" size="small">子服</el-radio>
                 </el-radio-group>
             </el-col>
-            <el-col :span="6">
-                <span class="font-label">装备道具 </span>
-                <!--<el-select v-model="itemOrEq.op" placeholder="请输入装备/道具名" size="small"
-                    :remote-method="searchItemOrEquire" :loading="itemOrEq.loading" style="width: 250px;" filterable
-                    multiple remote clearable collapse-tags>
-                    <el-option v-for="op in itemOrEq.ops" :key="op.id" :label="`${op.name}-${op.id}`"
-                        :value="`${op.name}-${op.id}`">
-                    </el-option>
-                </el-select>-->
-                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 250px;" multiple filterable remote
+            <el-col :span="5">
+                <span class="font-label">装备道具</span>
+                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 200px;" multiple filterable remote
                     collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
                     :loading="itemOrEq.loading" placeholder="请输入装备/道具名">
                     <template #default="{ item }">
@@ -366,8 +380,21 @@ export default {
                     </template>
                 </el-select-v2>
             </el-col>
-            <el-col :span="6">
-                <span class="font-label">数量 </span>
+            <el-col :span="3">
+                <span class="font-label">方案</span>
+                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 150px;" multiple filterable remote
+                    collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
+                    :loading="itemOrEq.loading" placeholder="请输入方案名">
+                    <template #default="{ item }">
+                        <span style="margin-right: 8px">{{ item.label }}</span>
+                        <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
+                            {{ item.value }}
+                        </span> -->
+                    </template>
+                </el-select-v2>
+            </el-col>
+            <el-col :span="4">
+                <span class="font-label">数量</span>
                 <el-input v-model="quantity" type="number" style="width: 172px" size="small" />
             </el-col>
         </el-row>
@@ -379,42 +406,43 @@ export default {
                 </el-radio-group>
             </el-col>
             <el-col :span="4">
-                <span class="font-label">发件人 </span>
+                <span class="font-label">发件人</span>
                 <el-input v-model="sender" style="width: 150px" size="small" />
             </el-col>
             <el-col :span="4">
-                <span class="font-label">邮标 </span>
+                <span class="font-label">邮标</span>
                 <el-input v-model="mailTitle" style="width: 150px" size="small" />
             </el-col>
             <el-col :span="4">
-                <span class="font-label">内容 </span>
+                <span class="font-label">内容</span>
                 <el-input v-model="mailContent" style="width: 150px" size="small" />
             </el-col>
             <el-col :span="4">
-                <span class="font-label">标签 </span>
+                <span class="font-label">标签</span>
                 <el-select v-model="sendLable" size="small" style="width: 150px">
                     <el-option v-for="sendLableOp in sendLableOps" :key="sendLableOp.id" :label="sendLableOp.value"
                         :value="sendLableOp.id" />
                 </el-select>
             </el-col>
             <el-col :span="5">
-                <span class="font-label">理由 </span>
+                <span class="font-label">理由</span>
                 <el-input v-model="reason" style="width: 172px" size="small" />
             </el-col>
         </el-row>
         <el-row>
-            <span class="font-label">游戏角色列表 </span>
-            <el-col :span="6">
+            <el-col :span="5">
+                <!-- <span class="font-label">游戏角色列表</span> -->
                 <el-input v-model="inputRoles" style="width: 275px" :rows="5" type="textarea" resize="none"
-                    placeholder="角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
+                    placeholder="<游戏角色列表格式>&#10;角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
-            <el-col :span="6">
+            <el-col :span="5">
+                <el-button class="clearAllItemsBtn" type="primary" @click="clearAllItems">清空旧道具表</el-button>
                 <el-upload name="uploadFile" accept=".xlsx,.xls" multiple limit="2" :file-list="uploadList"
                     :action="uploadUrl" :data="uploadParam" :on-success="uploadSuccess">
-                    <el-button type="primary" @click="clickUpload()">上传道具ID表</el-button>
+                    <el-button type="primary" @click="clickUpload">上传新道具表</el-button>
                     <template #tip>
                         <div class="el-upload__tip">
-                            <span style="color: red;">先选游戏，再点击上传按钮选道具+装备ID表</span>
+                            <span style="color: red;">先清理旧数据表，再多选上传道具+装备ID表</span>
                         </div>
                     </template>
                 </el-upload>
@@ -431,6 +459,37 @@ export default {
             <el-col :span="2">
                 <el-button type="primary" @click="queryBatchResult">处理结果</el-button>
             </el-col>
+            <el-col :span="2">
+                <el-button type="primary" @click="dialogVisible = true">新建方案</el-button>
+                <el-dialog v-model="dialogVisible" width="70%" title="新建方案">
+                    <div class="createDesignBox">
+                        <el-row>
+                            <el-col :span="4">
+                                <span class="font-label">方案名称</span>
+                                <el-input v-model="designName" style="width: 150px" size="small" />
+                            </el-col>
+                            <el-col :span="5">
+                                <span class="font-label">装备道具</span>
+                                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 200px;" multiple
+                                    filterable remote collapse-tags :remote-method="searchItemOrEquire" clearable
+                                    :options="itemOrEq.ops" :loading="itemOrEq.loading" placeholder="请输入装备/道具名">
+                                    <template #default="{ item }">
+                                        <span style="margin-right: 8px">{{ item.label }}</span>
+                                    </template>
+                                </el-select-v2>
+                            </el-col>
+                            <el-col :span="4">
+                                <span class="font-label">数量</span>
+                                <el-input v-model="quantity" type="number" style="width: 172px" size="small" />
+                            </el-col>
+                        </el-row>
+                    </div>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogVisible = false">取 消</el-button>
+                        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+                    </div>
+                </el-dialog>
+            </el-col>
         </el-row>
         <el-row>
             <el-col :span="24">
@@ -446,18 +505,15 @@ export default {
     color: black;
     font-family: 宋体;
     font-size: 14px;
+    margin-right: 10px;
 }
 
 .gameZoneSelectBox {
     margin-right: 5px;
 }
 
-.el-select__tags-text {
-    display: inline-block;
-    width: 20px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.clearAllItemsBtn {
+    margin-bottom: 5px;
 }
 
 .el-row {
