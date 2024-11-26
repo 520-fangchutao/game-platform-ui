@@ -371,7 +371,7 @@ export default {
                 <span class="font-label">装备道具</span>
                 <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 200px;" multiple filterable remote
                     collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
-                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名">
+                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名" :reserve-keyword="false" >
                     <template #default="{ item }">
                         <span style="margin-right: 8px">{{ item.label }}</span>
                         <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
@@ -382,16 +382,7 @@ export default {
             </el-col>
             <el-col :span="3">
                 <span class="font-label">方案</span>
-                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 150px;" multiple filterable remote
-                    collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
-                    :loading="itemOrEq.loading" placeholder="请输入方案名">
-                    <template #default="{ item }">
-                        <span style="margin-right: 8px">{{ item.label }}</span>
-                        <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
-                            {{ item.value }}
-                        </span> -->
-                    </template>
-                </el-select-v2>
+                <el-input size="small" style="width: 150px;"></el-input>
             </el-col>
             <el-col :span="4">
                 <span class="font-label">数量</span>
@@ -470,17 +461,11 @@ export default {
                             </el-col>
                             <el-col :span="5">
                                 <span class="font-label">装备道具</span>
-                                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 200px;" multiple
-                                    filterable remote collapse-tags :remote-method="searchItemOrEquire" clearable
-                                    :options="itemOrEq.ops" :loading="itemOrEq.loading" placeholder="请输入装备/道具名">
-                                    <template #default="{ item }">
-                                        <span style="margin-right: 8px">{{ item.label }}</span>
-                                    </template>
-                                </el-select-v2>
+                                <el-input size="small" style="width: 150px;"></el-input>
                             </el-col>
                             <el-col :span="4">
                                 <span class="font-label">数量</span>
-                                <el-input v-model="quantity" type="number" style="width: 172px" size="small" />
+                                <el-input type="number" style="width: 172px" size="small" />
                             </el-col>
                         </el-row>
                     </div>
@@ -519,4 +504,18 @@ export default {
 .el-row {
     margin-bottom: 20px;
 }
+
+::v-deep .el-select__tags-text {
+   display: inline-block;
+   max-width: 80px; // 根据实际情况调整
+   overflow: hidden; // 溢出隐藏
+   text-overflow: ellipsis; // 超出文本以省略号显示
+   white-space: nowrap; // 文本不换行
+}
+
+.el-tag__close.el-icon-close {
+    top: -7px; // 清除下标的位置调整
+ }
+
+
 </style>
