@@ -53,16 +53,41 @@ export default {
         }
     },
     methods: {
+        submitDesign(){
+            this.gameDesign.outputText = ''
+            ElMessage.success('提交方案成功！')
+            this.gameDesign.dialogVisible = false
+        },
         addDesign() {
-            if(this.gameDesign.itemOrEq.op.length === 0){
-                ElMessage.error('道具不能为空！')
-                return
+            let hasError = false
+            if (this.gameDesign.name.trim().length === 0) {
+                ElMessage.error('方案名称不能为空！')
+                hasError = true
             }
+            if (this.gameDesign.itemOrEq.op.length === 0) {
+                ElMessage.error('道具不能为空！')
+                hasError = true
+            }
+            let itemQty = this.gameDesign.quantity
             let selectedItems = this.gameDesign.itemOrEq.op
-            selectedItems.forEach(item => {
-                let itemId = item.split('-')[1]
-                ElMessage.info(itemId)
+            let itemRow = []
+            let itemRows = []
+            selectedItems.forEach(i => {
+                let itemId = i.split('-')[1]
+                let item = itemId + '#' + itemQty
+                if (itemRow.length >= 10) {
+                    itemRows.push(itemRow)
+                    itemRow = []
+                }
+                itemRow.push(item)
             })
+            itemRows.push(itemRow)
+            let outputText = ''
+            itemRows.forEach(itemRow => {
+                let itemRowStr = itemRow.join(';')
+                outputText = outputText + itemRowStr + '\n'
+            })
+            this.gameDesign.outputText = outputText
         },
         itemOrEqOpChange(itemOrEq) {
             this.itemOrEq = itemOrEq
@@ -459,24 +484,26 @@ export default {
                                 <ItemEqSelect :search-item-param="{ gameName: this.gameName.op.split('-')[0] }"
                                     @itemOrEqOpChange="itemOrEqOpChanDesign" />
                             </el-col>
-                            <el-col :span="7">
+                            <el-col :span="6">
                                 <span class="font-label">数量</span>
-                                <el-input v-model="gameDesign.quantity" type="number" style="width: 200px" size="small" />
+                                <el-input v-model="gameDesign.quantity" type="number" style="width: 200px"
+                                    size="small" />
                             </el-col>
-                            <el-col :span="3">
+                            <el-col :span="4">
                                 <el-button type="primary" size="small" @click="addDesign">添加</el-button>
+                                <el-button type="primary" size="small" @click="addDesign">压缩</el-button>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="24">
-                                <el-input v-model="gameDesign.outputText" style="width: 870px" :rows="10" type="textarea"
-                                    resize="none" placeholder="输出预设方案道具行" />
+                                <el-input v-model="gameDesign.outputText" style="width: 870px" :rows="10"
+                                    type="textarea" resize="none" placeholder="输出预设方案道具行" />
                             </el-col>
                         </el-row>
                     </div>
                     <div slot="footer" class="dialog-footer">
                         <el-button @click="gameDesign.dialogVisible = false">取 消</el-button>
-                        <el-button type="primary" @click="gameDesign.dialogVisible = false">确 定</el-button>
+                        <el-button type="primary" @click="submitDesign">确 定</el-button>
                     </div>
                 </el-dialog>
             </el-col>
