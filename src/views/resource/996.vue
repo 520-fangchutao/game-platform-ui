@@ -54,7 +54,15 @@ export default {
     },
     methods: {
         addDesign() {
-            ElMessage.info('添加方案')
+            if(this.gameDesign.itemOrEq.op.length === 0){
+                ElMessage.error('道具不能为空！')
+                return
+            }
+            let selectedItems = this.gameDesign.itemOrEq.op
+            selectedItems.forEach(item => {
+                let itemId = item.split('-')[1]
+                ElMessage.info(itemId)
+            })
         },
         itemOrEqOpChange(itemOrEq) {
             this.itemOrEq = itemOrEq
@@ -456,7 +464,7 @@ export default {
                                 <el-input v-model="gameDesign.quantity" type="number" style="width: 200px" size="small" />
                             </el-col>
                             <el-col :span="3">
-                                <el-button type="primary" @click="addDesign">添加</el-button>
+                                <el-button type="primary" size="small" @click="addDesign">添加</el-button>
                             </el-col>
                         </el-row>
                         <el-row>
