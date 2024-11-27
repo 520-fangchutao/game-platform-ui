@@ -1,4 +1,5 @@
 <script>
+import { ElMessage } from 'element-plus'
 export default {
     data() {
         return {
@@ -9,14 +10,20 @@ export default {
             }
         }
     },
+    props: {
+        searchItemParam: {
+            type: Object,
+            required: true
+        } 
+    },
     methods: {
         searchItemOrEquire(query) {
             if (query !== "") {
                 this.itemOrEq.loading = true;
-                let kv = this.gameName.op.split('-')
+                let gameName = this.searchItemParam.gameName
                 // 开始拿数据                
                 this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query
-                    + "&gameName=" + kv[0]
+                    + "&gameName=" + gameName
                 ).then((res) => {
                     let respData = res.data
                     if (respData.code === 'S') {
@@ -33,6 +40,9 @@ export default {
             } else {
                 this.itemOrEq.ops = []
             }
+        },
+        itemOrEqOpChange(){
+            this.$emit('itemOrEqOpChange',this.itemOrEq)
         }
     }
 }
@@ -40,9 +50,23 @@ export default {
 <template>
     <el-select-v2 v-model="itemOrEq.op" :remote-method="searchItemOrEquire" :options="itemOrEq.ops"
         :loading="itemOrEq.loading" :reserve-keyword="false" placeholder="请输入装备/道具名" size="small" style="width: 200px;"
-        clearable multiple filterable remote collapse-tags>
+        clearable multiple filterable remote collapse-tags collapse-tags-tooltip @change="itemOrEqOpChange">
         <template #default="{ item }">
             <span style="margin-right: 8px">{{ item.label }}</span>
         </template>
     </el-select-v2>
 </template>
+
+<style lang="less" scoped>
+::v-deep .el-select__tags-text {
+   display: inline-block;
+   max-width: 80px; // 根据实际情况调整
+   overflow: hidden; // 溢出隐藏
+   text-overflow: ellipsis; // 超出文本以省略号显示
+   white-space: nowrap; // 文本不换行
+}
+
+.el-tag__close.el-icon-close {
+    top: -7px; // 清除下标的位置调整
+ }
+</style>

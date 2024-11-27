@@ -1,8 +1,11 @@
 <script>
 import { ElMessage } from 'element-plus'
 import axios from 'axios';
-
+import ItemEqSelect from '@/components/ItemEqSelect.vue';
 export default {
+    components: {
+        ItemEqSelect
+    },
     data() {
         return {
             gameName: {
@@ -20,6 +23,17 @@ export default {
                 ops: [],
                 loading: false
             },
+            gameDesign: {
+                name: '',
+                itemOrEq: {
+                    op: [],
+                    ops: [],
+                    loading: false
+                },
+                quantity: 1,
+                dialogVisible: false,
+                outputText: '',
+            },
             quantity: 1,
             bindRadio: '1',
             sender: 'GM',
@@ -27,7 +41,7 @@ export default {
             mailContent: '1',
             sendLable: 'bug补偿',
             sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
-            reason: '内部攻沙区',
+            reason: 'GS资源申请',
             uploadUrl: '',
             uploadParam: {
                 gameName: ''
@@ -35,12 +49,19 @@ export default {
             uploadList: [],
             inputRoles: '',
             outputText: '',
-            batchProcCode: '',
-            dialogVisible: false,
-            designName: ''
+            batchProcCode: ''
         }
     },
     methods: {
+        addDesign() {
+            ElMessage.info('添加方案')
+        },
+        itemOrEqOpChange(itemOrEq) {
+            this.itemOrEq = itemOrEq
+        },
+        itemOrEqOpChanDesign(itemOrEq) {
+            this.gameDesign.itemOrEq = itemOrEq
+        },
         generateBatchRows(itemThreshold) {
             //开始生成数据输出行方法
             let gameId = this.gameName.op.split('-')[1]
@@ -107,32 +128,6 @@ export default {
                 })
             } else {
                 this.gameZone.ops = []
-            }
-        },
-        // 当用户输入内容开始远程搜索模糊查询的时候，会触发searchItemOrEquire方法
-        searchItemOrEquire(query) {
-            // 如果用户输入内容了，就发请求拿数据，远程搜索模糊查询
-            if (query !== "") {
-                this.itemOrEq.loading = true;
-                let kv = this.gameName.op.split('-')
-                // 开始拿数据                
-                this.$http.get("/Jiu96/selectPageByItemOrEq?keyword=" + query
-                    + "&gameName=" + kv[0]
-                ).then((res) => {
-                    let respData = res.data
-                    if (respData.code === 'S') {
-                        this.itemOrEq.ops = respData.data.map((op) => {
-                            return { value: `${op.name}-${op.id}`, label: `${op.name}-${op.id}` }
-                        })
-                    } else {
-                        ElMessage.error(respData.msg)
-                    }
-                    this.itemOrEq.loading = false
-                }).catch((error) => {
-                    console.log('意料之外的错误：', error)
-                })
-            } else {
-                this.itemOrEq.ops = []
             }
         },
         clearAllItems() {
@@ -202,7 +197,7 @@ export default {
             }
 
             this.generateBatchRows(10)
-
+            ElMessage.success('添加数据成功！')
         },
         procExceedPart(e) {
             let count = this.$commUtil.countChar(e, '#')
@@ -369,16 +364,8 @@ export default {
             </el-col>
             <el-col :span="5">
                 <span class="font-label">装备道具</span>
-                <el-select-v2 v-model="itemOrEq.op" size="small" style="width: 200px;" multiple filterable remote
-                    collapse-tags :remote-method="searchItemOrEquire" clearable :options="itemOrEq.ops"
-                    :loading="itemOrEq.loading" placeholder="请输入装备/道具名" :reserve-keyword="false" >
-                    <template #default="{ item }">
-                        <span style="margin-right: 8px">{{ item.label }}</span>
-                        <!-- <span style="color: var(--el-text-color-secondary); font-size: 13px">
-                            {{ item.value }}
-                        </span> -->
-                    </template>
-                </el-select-v2>
+                <ItemEqSelect :search-item-param="{ gameName: this.gameName.op.split('-')[0] }"
+                    @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
             <el-col :span="3">
                 <span class="font-label">方案</span>
@@ -451,27 +438,37 @@ export default {
                 <el-button type="primary" @click="queryBatchResult">处理结果</el-button>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary" @click="dialogVisible = true">新建方案</el-button>
-                <el-dialog v-model="dialogVisible" width="70%" title="新建方案">
+                <el-button type="primary" @click="gameDesign.dialogVisible = true">新建方案</el-button>
+                <el-dialog v-model="gameDesign.dialogVisible" width="55%" title="新建方案">
                     <div class="createDesignBox">
                         <el-row>
-                            <el-col :span="4">
+                            <el-col :span="7">
                                 <span class="font-label">方案名称</span>
-                                <el-input v-model="designName" style="width: 150px" size="small" />
+                                <el-input v-model="gameDesign.name" style="width: 200px" size="small" />
                             </el-col>
-                            <el-col :span="5">
+                            <el-col :span="7">
                                 <span class="font-label">装备道具</span>
-                                <el-input size="small" style="width: 150px;"></el-input>
+                                <ItemEqSelect :search-item-param="{ gameName: this.gameName.op.split('-')[0] }"
+                                    @itemOrEqOpChange="itemOrEqOpChanDesign" />
                             </el-col>
-                            <el-col :span="4">
+                            <el-col :span="7">
                                 <span class="font-label">数量</span>
-                                <el-input type="number" style="width: 172px" size="small" />
+                                <el-input v-model="gameDesign.quantity" type="number" style="width: 200px" size="small" />
+                            </el-col>
+                            <el-col :span="3">
+                                <el-button type="primary" @click="addDesign">添加</el-button>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-input v-model="gameDesign.outputText" style="width: 870px" :rows="10" type="textarea"
+                                    resize="none" placeholder="输出预设方案道具行" />
                             </el-col>
                         </el-row>
                     </div>
                     <div slot="footer" class="dialog-footer">
-                        <el-button @click="dialogVisible = false">取 消</el-button>
-                        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+                        <el-button @click="gameDesign.dialogVisible = false">取 消</el-button>
+                        <el-button type="primary" @click="gameDesign.dialogVisible = false">确 定</el-button>
                     </div>
                 </el-dialog>
             </el-col>
@@ -504,18 +501,4 @@ export default {
 .el-row {
     margin-bottom: 20px;
 }
-
-::v-deep .el-select__tags-text {
-   display: inline-block;
-   max-width: 80px; // 根据实际情况调整
-   overflow: hidden; // 溢出隐藏
-   text-overflow: ellipsis; // 超出文本以省略号显示
-   white-space: nowrap; // 文本不换行
-}
-
-.el-tag__close.el-icon-close {
-    top: -7px; // 清除下标的位置调整
- }
-
-
 </style>
