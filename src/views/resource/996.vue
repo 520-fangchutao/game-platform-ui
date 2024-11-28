@@ -2,15 +2,17 @@
 import { ElMessage } from 'element-plus'
 import axios from 'axios';
 import ItemEqSelect from '@/components/ItemEqSelect.vue';
+import GameNameSelect from '@/components/GameNameSelect.vue';
 export default {
     components: {
-        ItemEqSelect
+        ItemEqSelect,
+        GameNameSelect
     },
     data() {
         return {
             gameName: {
                 op: '',
-                ops: [{ name: '【TT联运】创游传奇', id: 7064 }]
+                ops: []
             },
             gameZone: {
                 op: '',
@@ -29,6 +31,10 @@ export default {
                     op: [],
                     ops: [],
                     loading: false
+                },
+                gameName: {
+                    op: '',
+                    ops: []
                 },
                 quantity: 1,
                 dialogVisible: false,
@@ -53,10 +59,26 @@ export default {
         }
     },
     methods: {
-        submitDesign(){
+        submitDesign() {
+            
             this.gameDesign.outputText = ''
-            ElMessage.success('提交方案成功！')
             this.gameDesign.dialogVisible = false
+            ElMessage.success('提交方案成功！')
+        },
+        optimizeDesign(){
+            if(this.gameDesign.outputText.trim().length === 0){
+                ElMessage.info('没有可压缩的数据行！')
+                return
+            }
+            let outputText = this.gameDesign.outputText.split('\n').join(';')
+            let count = this.$commUtil.countChar(outputText, '#')
+            let splitStrs = []
+            if(count > 10){
+                this.splitItems(outputText,splitStrs,10,';')
+            }
+            splitStrs = splitStrs.map(row => row.substring(0,row.length - 1))
+            this.gameDesign.outputText = splitStrs.join('\n')
+            ElMessage.success('压缩数据成功！')
         },
         addDesign() {
             let hasError = false
@@ -67,6 +89,9 @@ export default {
             if (this.gameDesign.itemOrEq.op.length === 0) {
                 ElMessage.error('道具不能为空！')
                 hasError = true
+            }
+            if(hasError){
+                return
             }
             let itemQty = this.gameDesign.quantity
             let selectedItems = this.gameDesign.itemOrEq.op
@@ -87,7 +112,13 @@ export default {
                 let itemRowStr = itemRow.join(';')
                 outputText = outputText + itemRowStr + '\n'
             })
-            this.gameDesign.outputText = outputText
+            this.gameDesign.outputText += outputText
+        },
+        gameNameOpChange(gameName) {
+            this.gameName = gameName
+        },
+        gameNameOpChanDesign(gameName) {
+            this.gameDesign.gameName = gameName
         },
         itemOrEqOpChange(itemOrEq) {
             this.itemOrEq = itemOrEq
@@ -232,25 +263,42 @@ export default {
             this.generateBatchRows(10)
             ElMessage.success('添加数据成功！')
         },
-        procExceedPart(e) {
-            let count = this.$commUtil.countChar(e, '#')
-            let splitCount = Math.floor(count / 10)
-            if (count % 10 === 0) {
+        splitItems(splitStr,splitStrs,divisor,separator){
+            let count = this.$commUtil.countChar(splitStr, separator) + 1
+            let splitCount = Math.floor(count / divisor)
+            if (count % divisor === 0) {
                 splitCount = splitCount - 1
             }
-            let headIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
-            let headStr = e.substring(0, headIdx + 1)
-            let splitStr = e.substring(headIdx + 1)
-            let splitStrs = []
             for (let i = 0; i < splitCount; i++) {
-                let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, 10, ';') + 1
+                let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, divisor, separator) + 1
                 let splitPart = splitStr.substring(0, splitIdx)
                 splitStrs.push(splitPart)
                 splitStr = splitStr.substring(splitIdx)
             }
             splitStrs.push(splitStr)
+        },
+        procExceedPart(e) {
+            let headIdx = this.$commUtil.recursionIndex(e, 0, 9, '\t')
+            let headStr = e.substring(0, headIdx + 1)
+            let splitStr = e.substring(headIdx + 1)
+            let splitStrs = []
+            this.splitItems(splitStr,splitStrs,10,';')
             splitStrs.push(headStr)
             return splitStrs
+            // let count = this.$commUtil.countChar(e, '#')
+            // let splitCount = Math.floor(count / 10)
+            // if (count % 10 === 0) {
+            //     splitCount = splitCount - 1
+            // }
+            // for (let i = 0; i < splitCount; i++) {
+            //     let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, 10, ';') + 1
+            //     let splitPart = splitStr.substring(0, splitIdx)
+            //     splitStrs.push(splitPart)
+            //     splitStr = splitStr.substring(splitIdx)
+            // }
+            // splitStrs.push(splitStr)
+            // splitStrs.push(headStr)
+            // return splitStrs
         },
         optimizeData() {
             if (this.outputText.trim().length === 0) {
@@ -364,12 +412,6 @@ export default {
                 ElMessage.error('意料之外的错误：' + error)
             })
         }
-    },
-    created() {
-        //默认选中第一项
-        let ops = this.gameName.ops[0]
-        this.gameName.op = ops.name + '-' + ops.id
-
     }
 }
 </script>
@@ -378,10 +420,7 @@ export default {
         <el-row>
             <el-col :span="5">
                 <span class="font-label">游戏名称</span>
-                <el-select v-model="gameName.op" placeholder="选择游戏" size="small" style="width: 250px" clearable>
-                    <el-option v-for="op in gameName.ops" :key="op.id" :label="`${op.name}-${op.id}`"
-                        :value="`${op.name}-${op.id}`" />
-                </el-select>
+                <GameNameSelect @gameNameOpChange="gameNameOpChange" />
             </el-col>
             <el-col :span="6">
                 <span class="font-label">区服名称</span>
@@ -397,7 +436,8 @@ export default {
             </el-col>
             <el-col :span="5">
                 <span class="font-label">装备道具</span>
-                <ItemEqSelect :search-item-param="{ gameName: this.gameName.op.split('-')[0] }"
+                <ItemEqSelect
+                    :search-item-param="{ gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
                     @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
             <el-col :span="3">
@@ -472,38 +512,44 @@ export default {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="gameDesign.dialogVisible = true">新建方案</el-button>
-                <el-dialog v-model="gameDesign.dialogVisible" width="55%" title="新建方案">
+                <el-dialog v-model="gameDesign.dialogVisible" width="80%" title="新建方案">
                     <div class="createDesignBox">
                         <el-row>
-                            <el-col :span="7">
-                                <span class="font-label">方案名称</span>
-                                <el-input v-model="gameDesign.name" style="width: 200px" size="small" />
+                            <el-col :span="6">
+                                <span class="font-label">游戏名称</span>
+                                <GameNameSelect @gameNameOpChange="gameNameOpChanDesign" />
                             </el-col>
-                            <el-col :span="7">
+                            <el-col :span="5">
+                                <span class="font-label">方案名称</span>
+                                <el-input v-model="gameDesign.name" placeholder="请输入方案名" style="width: 200px"
+                                    size="small" />
+                            </el-col>
+                            <el-col :span="5">
                                 <span class="font-label">装备道具</span>
-                                <ItemEqSelect :search-item-param="{ gameName: this.gameName.op.split('-')[0] }"
+                                <ItemEqSelect
+                                    :search-item-param="{ gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
                                     @itemOrEqOpChange="itemOrEqOpChanDesign" />
                             </el-col>
-                            <el-col :span="6">
+                            <el-col :span="4">
                                 <span class="font-label">数量</span>
-                                <el-input v-model="gameDesign.quantity" type="number" style="width: 200px"
+                                <el-input v-model="gameDesign.quantity" type="number" style="width: 100px"
                                     size="small" />
                             </el-col>
                             <el-col :span="4">
                                 <el-button type="primary" size="small" @click="addDesign">添加</el-button>
-                                <el-button type="primary" size="small" @click="addDesign">压缩</el-button>
+                                <el-button type="primary" size="small" @click="optimizeDesign">压缩</el-button>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="24">
-                                <el-input v-model="gameDesign.outputText" style="width: 870px" :rows="10"
+                                <el-input v-model="gameDesign.outputText" style="width: 1350px" :rows="10"
                                     type="textarea" resize="none" placeholder="输出预设方案道具行" />
                             </el-col>
                         </el-row>
                     </div>
                     <div slot="footer" class="dialog-footer">
-                        <el-button @click="gameDesign.dialogVisible = false">取 消</el-button>
-                        <el-button type="primary" @click="submitDesign">确 定</el-button>
+                        <el-button @click="gameDesign.dialogVisible = false" size="small">取 消</el-button>
+                        <el-button type="primary" @click="submitDesign" size="small">确 定</el-button>
                     </div>
                 </el-dialog>
             </el-col>
