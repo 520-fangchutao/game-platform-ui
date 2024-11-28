@@ -17,3 +17,19 @@ export function distinctArr(srcArr,discArr){
         arr.indexOf(self) === index ? discArr.push(self) : null;
     });
 }
+
+export function isEmpty(value) {
+    switch (typeof value) {
+      case 'string':
+      case 'undefined':
+        return !value;
+      case 'boolean':
+        return !value;
+      case 'number':
+        return isNaN(value);
+      case 'object':
+        return Array.isArray(value) ? !value.length : !Object.keys(value).length;
+      default:
+        return false;
+    }
+  }

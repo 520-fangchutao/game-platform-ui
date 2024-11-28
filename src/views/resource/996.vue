@@ -3,10 +3,12 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios';
 import ItemEqSelect from '@/components/ItemEqSelect.vue';
 import GameNameSelect from '@/components/GameNameSelect.vue';
+import GameZoneSelect from '@/components/GameZoneSelect.vue';
 export default {
     components: {
         ItemEqSelect,
-        GameNameSelect
+        GameNameSelect,
+        GameZoneSelect
     },
     data() {
         return {
@@ -59,24 +61,30 @@ export default {
         }
     },
     methods: {
+        searchZoneParam() {
+            return {
+                gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0],
+                gameId: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[1]
+            }
+        },
         submitDesign() {
-            
+
             this.gameDesign.outputText = ''
             this.gameDesign.dialogVisible = false
             ElMessage.success('提交方案成功！')
         },
-        optimizeDesign(){
-            if(this.gameDesign.outputText.trim().length === 0){
+        optimizeDesign() {
+            if (this.gameDesign.outputText.trim().length === 0) {
                 ElMessage.info('没有可压缩的数据行！')
                 return
             }
             let outputText = this.gameDesign.outputText.split('\n').join(';')
             let count = this.$commUtil.countChar(outputText, '#')
             let splitStrs = []
-            if(count > 10){
-                this.splitItems(outputText,splitStrs,10,';')
+            if (count > 10) {
+                this.splitItems(outputText, splitStrs, 10, ';')
             }
-            splitStrs = splitStrs.map(row => row.substring(0,row.length - 1))
+            splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
             this.gameDesign.outputText = splitStrs.join('\n')
             ElMessage.success('压缩数据成功！')
         },
@@ -90,7 +98,7 @@ export default {
                 ElMessage.error('道具不能为空！')
                 hasError = true
             }
-            if(hasError){
+            if (hasError) {
                 return
             }
             let itemQty = this.gameDesign.quantity
@@ -113,6 +121,9 @@ export default {
                 outputText = outputText + itemRowStr + '\n'
             })
             this.gameDesign.outputText += outputText
+        },
+        gameZoneOpChange(gameZone) {
+            this.gameZone = gameZone
         },
         gameNameOpChange(gameName) {
             this.gameName = gameName
@@ -170,30 +181,30 @@ export default {
                 })
             })
         },
-        searchGameZone(query) {
-            if (query !== "") {
-                this.gameZone.loading = true;
-                let kv = this.gameName.op.split('-')
-                this.$http.get("/Jiu96/queryZones?keyword=" + query +
-                    "&gameName=" + kv[0] +
-                    "&gameId=" + kv[1] +
-                    "&queryRange=" + this.gameZone.serverRadio
-                ).then((res) => {
-                    let respData = res.data
-                    if (respData.code === 'S') {
-                        this.gameZone.ops = respData.data
-                    } else {
-                        ElMessage.error(respData.msg)
-                    }
-                    this.gameZone.loading = false
-                }).catch((error) => {
-                    console.log(error)
-                    ElMessage.error('意料之外的错误：' + error)
-                })
-            } else {
-                this.gameZone.ops = []
-            }
-        },
+        // searchGameZone(query) {
+        //     if (query !== "") {
+        //         this.gameZone.loading = true;
+        //         let kv = this.gameName.op.split('-')
+        //         this.$http.get("/Jiu96/queryZones?keyword=" + query +
+        //             "&gameName=" + kv[0] +
+        //             "&gameId=" + kv[1] +
+        //             "&queryRange=" + this.gameZone.serverRadio
+        //         ).then((res) => {
+        //             let respData = res.data
+        //             if (respData.code === 'S') {
+        //                 this.gameZone.ops = respData.data
+        //             } else {
+        //                 ElMessage.error(respData.msg)
+        //             }
+        //             this.gameZone.loading = false
+        //         }).catch((error) => {
+        //             console.log(error)
+        //             ElMessage.error('意料之外的错误：' + error)
+        //         })
+        //     } else {
+        //         this.gameZone.ops = []
+        //     }
+        // },
         clearAllItems() {
             let gameName = this.gameName.op.split('-')[0];
             this.$http.get(
@@ -201,7 +212,7 @@ export default {
             ).then((res) => {
                 let respData = res.data
                 if (respData.code === 'S') {
-                    ElMessage.success(respData.msg)
+                    ElMessage.success(respData.data)
                 } else {
                     ElMessage.error(respData.msg)
                 }
@@ -217,7 +228,7 @@ export default {
         },
         uploadSuccess(respData) {
             if (respData.code === 'S') {
-                ElMessage.success(respData.msg)
+                ElMessage.success(respData.data)
             } else {
                 ElMessage.error(respData.msg)
             }
@@ -263,7 +274,7 @@ export default {
             this.generateBatchRows(10)
             ElMessage.success('添加数据成功！')
         },
-        splitItems(splitStr,splitStrs,divisor,separator){
+        splitItems(splitStr, splitStrs, divisor, separator) {
             let count = this.$commUtil.countChar(splitStr, separator) + 1
             let splitCount = Math.floor(count / divisor)
             if (count % divisor === 0) {
@@ -282,23 +293,9 @@ export default {
             let headStr = e.substring(0, headIdx + 1)
             let splitStr = e.substring(headIdx + 1)
             let splitStrs = []
-            this.splitItems(splitStr,splitStrs,10,';')
+            this.splitItems(splitStr, splitStrs, 10, ';')
             splitStrs.push(headStr)
             return splitStrs
-            // let count = this.$commUtil.countChar(e, '#')
-            // let splitCount = Math.floor(count / 10)
-            // if (count % 10 === 0) {
-            //     splitCount = splitCount - 1
-            // }
-            // for (let i = 0; i < splitCount; i++) {
-            //     let splitIdx = this.$commUtil.recursionIndex(splitStr, 0, 10, ';') + 1
-            //     let splitPart = splitStr.substring(0, splitIdx)
-            //     splitStrs.push(splitPart)
-            //     splitStr = splitStr.substring(splitIdx)
-            // }
-            // splitStrs.push(splitStr)
-            // splitStrs.push(headStr)
-            // return splitStrs
         },
         optimizeData() {
             if (this.outputText.trim().length === 0) {
@@ -376,10 +373,12 @@ export default {
                 "/Jiu96/batchItemSend",
                 { gameName: gameName, batchReqText: batchReqText }
             ).then((res) => {
+                //console.log('批量数据=>',res)
                 let respData = res.data
                 if (respData.code === 'S') {
                     let code = respData.data
                     this.batchProcCode = code
+                    this.outputText = ''
                     ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
                 } else {
                     ElMessage.error(respData.msg)
@@ -424,11 +423,12 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">区服名称</span>
-                <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
+                <GameZoneSelect :search-zone-param="searchZoneParam" @gameZoneOpChange="gameZoneOpChange" />
+                <!-- <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
                     :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
                     <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
                         :value="`${op.name}-${op.id}`" />
-                </el-select>
+                </el-select> -->
                 <el-radio-group v-model="gameZone.serverRadio">
                     <el-radio value="1" size="small">主服</el-radio>
                     <el-radio value="2" size="small">子服</el-radio>
@@ -437,7 +437,7 @@ export default {
             <el-col :span="5">
                 <span class="font-label">装备道具</span>
                 <ItemEqSelect
-                    :search-item-param="{ gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
+                    :search-item-param="{ gameName: (gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
                     @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
             <el-col :span="3">
