@@ -67,11 +67,35 @@ export default {
                 gameId: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[1]
             }
         },
+        searchItemParam(){
+            return { gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }
+        },
         submitDesign() {
-
+            if(this.gameDesign.outputText.trim().length === 0){
+                ElMessage.info('没有可提交的方案行！')
+                return
+            }
+            let batchReqName = this.gameDesign.name
+            let batchReqText = this.gameDesign.outputText
+            let gameName = this.gameName.op.split('-')[0]
+            this.$http.post(
+                "/Jiu96/saveItemDesign",
+                { gameName: gameName,batchReqName: batchReqName, batchReqText: batchReqText }
+            ).then((res) => {
+                let respData = res.data
+                if (respData.code === 'S') {
+                    ElMessage.success(respData.data)
+                } else {
+                    ElMessage.error(respData.msg)
+                }
+            }).catch((error) => {
+                console.error(error)
+                ElMessage.error('意料之外的错误：' + error)
+            })
+            this.gameDesign.name = ''
+            this.$refs.outerItemEqDesignRef.clearSelectVal()
             this.gameDesign.outputText = ''
             this.gameDesign.dialogVisible = false
-            ElMessage.success('提交方案成功！')
         },
         optimizeDesign() {
             if (this.gameDesign.outputText.trim().length === 0) {
@@ -83,9 +107,11 @@ export default {
             let splitStrs = []
             if (count > 10) {
                 this.splitItems(outputText, splitStrs, 10, ';')
+                splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
+                this.gameDesign.outputText = splitStrs.join('\n')
+            }else{
+                this.gameDesign.outputText = outputText.substring(0,outputText.length-1) + '\n'
             }
-            splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
-            this.gameDesign.outputText = splitStrs.join('\n')
             ElMessage.success('压缩数据成功！')
         },
         addDesign() {
@@ -181,30 +207,6 @@ export default {
                 })
             })
         },
-        // searchGameZone(query) {
-        //     if (query !== "") {
-        //         this.gameZone.loading = true;
-        //         let kv = this.gameName.op.split('-')
-        //         this.$http.get("/Jiu96/queryZones?keyword=" + query +
-        //             "&gameName=" + kv[0] +
-        //             "&gameId=" + kv[1] +
-        //             "&queryRange=" + this.gameZone.serverRadio
-        //         ).then((res) => {
-        //             let respData = res.data
-        //             if (respData.code === 'S') {
-        //                 this.gameZone.ops = respData.data
-        //             } else {
-        //                 ElMessage.error(respData.msg)
-        //             }
-        //             this.gameZone.loading = false
-        //         }).catch((error) => {
-        //             console.log(error)
-        //             ElMessage.error('意料之外的错误：' + error)
-        //         })
-        //     } else {
-        //         this.gameZone.ops = []
-        //     }
-        // },
         clearAllItems() {
             let gameName = this.gameName.op.split('-')[0];
             this.$http.get(
@@ -272,6 +274,7 @@ export default {
             }
 
             this.generateBatchRows(10)
+            this.$refs.outerItemEqRef.clearSelectVal()
             ElMessage.success('添加数据成功！')
         },
         splitItems(splitStr, splitStrs, divisor, separator) {
@@ -378,6 +381,9 @@ export default {
                 if (respData.code === 'S') {
                     let code = respData.data
                     this.batchProcCode = code
+                    this.$refs.outerGameZoneRef.clearSelectVal()
+                    this.$refs.outerItemEqRef.clearSelectVal()
+                    this.inputRoles = ''
                     this.outputText = ''
                     ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
                 } else {
@@ -423,12 +429,7 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">区服名称</span>
-                <GameZoneSelect :search-zone-param="searchZoneParam" @gameZoneOpChange="gameZoneOpChange" />
-                <!-- <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
-                    :remote-method="searchGameZone" style="width: 150px" filterable remote clearable>
-                    <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
-                        :value="`${op.name}-${op.id}`" />
-                </el-select> -->
+                <GameZoneSelect ref="outerGameZoneRef" :search-zone-param="searchZoneParam()" @gameZoneOpChange="gameZoneOpChange" />
                 <el-radio-group v-model="gameZone.serverRadio">
                     <el-radio value="1" size="small">主服</el-radio>
                     <el-radio value="2" size="small">子服</el-radio>
@@ -436,9 +437,7 @@ export default {
             </el-col>
             <el-col :span="5">
                 <span class="font-label">装备道具</span>
-                <ItemEqSelect
-                    :search-item-param="{ gameName: (gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
-                    @itemOrEqOpChange="itemOrEqOpChange" />
+                <ItemEqSelect ref="outerItemEqRef" :search-item-param="searchItemParam()" @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
             <el-col :span="3">
                 <span class="font-label">方案</span>
@@ -526,9 +525,7 @@ export default {
                             </el-col>
                             <el-col :span="5">
                                 <span class="font-label">装备道具</span>
-                                <ItemEqSelect
-                                    :search-item-param="{ gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }"
-                                    @itemOrEqOpChange="itemOrEqOpChanDesign" />
+                                <ItemEqSelect ref="outerItemEqDesignRef" :search-item-param="searchItemParam()" @itemOrEqOpChange="itemOrEqOpChanDesign" />
                             </el-col>
                             <el-col :span="4">
                                 <span class="font-label">数量</span>

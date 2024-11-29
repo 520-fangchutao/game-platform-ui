@@ -1,7 +1,7 @@
 <script>
 import { ElMessage } from 'element-plus'
-export default{
-    data(){
+export default {
+    data() {
         return {
             gameZone: {
                 op: '',
@@ -15,9 +15,13 @@ export default{
         searchZoneParam: {
             type: Object,
             required: true
-        } 
+        }
     },
     methods: {
+        clearSelectVal(){
+            this.gameZone.op = ''
+            this.gameZoneOpChange()
+        },
         searchGameZone(query) {
             if (query !== "") {
                 this.gameZone.loading = true;
@@ -43,23 +47,26 @@ export default{
                 this.gameZone.ops = []
             }
         },
-        gameZoneOpChange(){
-            this.$emit('gameZoneOpChange',this.gameZone)
+        gameZoneOpChange() {
+            this.$emit('gameZoneOpChange', this.gameZone)
+        },
+        mounted() {
+            const entries = Object.entries(this.$refs.innerGameZoneRef);
+            for (const [key, value] of entries) {
+                this[key] = value;
+            }
         }
     }
 }
 </script>
 
 <template>
-    <el-select class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服" size="small"
-        :remote-method="searchGameZone" style="width: 150px" filterable remote clearable @change="gameZoneOpChange">
+    <el-select ref="innerGameZoneRef" v-bind="$attrs" class="gameZoneSelectBox" v-model="gameZone.op" placeholder="选择区服"
+        size="small" :remote-method="searchGameZone" style="width: 150px" filterable remote clearable
+        @change="gameZoneOpChange">
         <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
             :value="`${op.name}-${op.id}`" />
     </el-select>
 </template>
 
-<style lang="less" scoped>
-.gameZoneSelectBox {
-    margin-right: 5px;
-}
-</style>
+<style lang="less" scoped></style>

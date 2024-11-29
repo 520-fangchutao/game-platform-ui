@@ -17,6 +17,10 @@ export default {
         } 
     },
     methods: {
+        clearSelectVal(){
+            this.itemOrEq.op = []
+            this.itemOrEqOpChange()
+        },
         searchItemOrEquire(query) {
             if (query !== "") {
                 this.itemOrEq.loading = true;
@@ -44,11 +48,17 @@ export default {
         itemOrEqOpChange(){
             this.$emit('itemOrEqOpChange',this.itemOrEq)
         }
+    },
+    mounted() {
+        const entries = Object.entries(this.$refs.innerItemEqRef);
+        for (const [key, value] of entries) {
+            this[key] = value;
+        }
     }
 }
 </script>
 <template>
-    <el-select-v2 v-model="itemOrEq.op" :remote-method="searchItemOrEquire" :options="itemOrEq.ops"
+    <el-select-v2 ref="innerItemEqRef" v-bind="$attrs" v-model="itemOrEq.op" :remote-method="searchItemOrEquire" :options="itemOrEq.ops"
         :loading="itemOrEq.loading" :reserve-keyword="false" placeholder="请输入装备/道具名" size="small" style="width: 200px;"
         clearable multiple filterable remote collapse-tags collapse-tags-tooltip @change="itemOrEqOpChange">
         <template #default="{ item }">
