@@ -18,7 +18,7 @@ export default {
         }
     },
     methods: {
-        clearSelectVal(){
+        clearSelectVal() {
             this.gameZone.op = ''
             this.gameZoneOpChange()
         },
@@ -67,6 +67,14 @@ export default {
         <el-option v-for="op in gameZone.ops" :key="op.id" :label="`${op.name}-${op.id}`"
             :value="`${op.name}-${op.id}`" />
     </el-select>
+    <el-radio-group v-model="gameZone.serverRadio">
+        <el-radio value="1" size="small">主服</el-radio>
+        <el-radio value="2" size="small">子服</el-radio>
+    </el-radio-group>
 </template>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.gameZoneSelectBox {
+    margin-right: 5px;
+}
+</style>

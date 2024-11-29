@@ -4,11 +4,13 @@ import axios from 'axios';
 import ItemEqSelect from '@/components/ItemEqSelect.vue';
 import GameNameSelect from '@/components/GameNameSelect.vue';
 import GameZoneSelect from '@/components/GameZoneSelect.vue';
+import GameDesignSelect from '@/components/GameDesignSelect.vue';
 export default {
     components: {
         ItemEqSelect,
         GameNameSelect,
-        GameZoneSelect
+        GameZoneSelect,
+        GameDesignSelect
     },
     data() {
         return {
@@ -29,6 +31,11 @@ export default {
             },
             gameDesign: {
                 name: '',
+                designSelect: {
+                    op: [],
+                    ops: [],
+                    loading: false
+                },
                 itemOrEq: {
                     op: [],
                     ops: [],
@@ -163,6 +170,42 @@ export default {
         itemOrEqOpChanDesign(itemOrEq) {
             this.gameDesign.itemOrEq = itemOrEq
         },
+        itemDesignOpChange(designSelect){
+            this.gameDesign.designSelect = designSelect
+        },
+        generateDesignRows(){
+            //开始生成数据输出行方法
+            let gameId = this.gameName.op.split('-')[1]
+            let zoneId = this.gameZone.op.split('-')[1]
+            let roleNames = this.inputRoles.split('\n')
+            let bindStatus = this.bindRadio
+            let sender = this.sender
+            let mailTitle = this.mailTitle
+            let mailContent = this.mailContent
+            let sendLable = this.sendLable
+            let reason = this.reason
+            let items = this.gameDesign.designSelect.op.split('\n')
+            let headers = []
+            roleNames.forEach(roleName => {
+                let header = gameId + '\t' + 
+                zoneId + '\t' + 
+                roleName + '\t' + 
+                bindStatus + '\t' + 
+                sender + '\t' + 
+                mailTitle + '\t' + 
+                mailContent + '\t' +
+                sendLable + '\t' +
+                reason + '\t'
+                headers.push(header)
+            })
+            let outputDesignText = ''
+            headers.forEach(header => {
+                items.forEach(item => {
+                    outputDesignText += header + '\t' + item
+                })
+            })
+            this.outputText = outputDesignText
+        },
         generateBatchRows(itemThreshold) {
             //开始生成数据输出行方法
             let gameId = this.gameName.op.split('-')[1]
@@ -245,9 +288,21 @@ export default {
                 ElMessage.error('游戏区服不能为空！')
                 hasError = true
             }
+            let hasDesign = false
+            let hasItemEq = false
+            if (!(this.itemOrEq.op == null || this.itemOrEq.op.length === 0)) {
+                hasItemEq = true
+                if(!(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0)){
+                    hasDesign = true
+                    ElMessage.error('道具装备与预设方案只能二选一！')
+                    hasError = true
+                }
+            }
             if (this.itemOrEq.op == null || this.itemOrEq.op.length === 0) {
-                ElMessage.error('道具装备不能为空！')
-                hasError = true
+                if(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0){
+                    ElMessage.error('道具装备与预设方案不能都为空！')
+                    hasError = true
+                }
             }
             if (this.sender == null || this.sender.trim().length === 0) {
                 ElMessage.error('发件人不能为空！')
@@ -272,8 +327,12 @@ export default {
             if (hasError) {
                 return
             }
-
-            this.generateBatchRows(10)
+            if(hasItemEq){
+                this.generateBatchRows(10)
+            }
+            // if(hasDesign){
+            //     this.generateDesignRows()
+            // }
             this.$refs.outerItemEqRef.clearSelectVal()
             ElMessage.success('添加数据成功！')
         },
@@ -430,18 +489,14 @@ export default {
             <el-col :span="6">
                 <span class="font-label">区服名称</span>
                 <GameZoneSelect ref="outerGameZoneRef" :search-zone-param="searchZoneParam()" @gameZoneOpChange="gameZoneOpChange" />
-                <el-radio-group v-model="gameZone.serverRadio">
-                    <el-radio value="1" size="small">主服</el-radio>
-                    <el-radio value="2" size="small">子服</el-radio>
-                </el-radio-group>
             </el-col>
-            <el-col :span="5">
+            <el-col :span="4">
                 <span class="font-label">装备道具</span>
                 <ItemEqSelect ref="outerItemEqRef" :search-item-param="searchItemParam()" @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
-            <el-col :span="3">
+            <el-col :span="4">
                 <span class="font-label">方案</span>
-                <el-input size="small" style="width: 150px;"></el-input>
+                <GameDesignSelect ref="outerGameDesignRef" :search-design-param="searchItemParam()" @itemDesignOpChange="itemDesignOpChange" />
             </el-col>
             <el-col :span="4">
                 <span class="font-label">数量</span>
@@ -566,10 +621,6 @@ export default {
     font-family: 宋体;
     font-size: 14px;
     margin-right: 10px;
-}
-
-.gameZoneSelectBox {
-    margin-right: 5px;
 }
 
 .clearAllItemsBtn {
