@@ -49,7 +49,7 @@ export default{
 <template>
     <el-select-v2 ref="innerItemDesignRef" v-bind="$attrs" v-model="designSelect.op" :remote-method="searchItemDesign" :options="designSelect.ops"
         :loading="designSelect.loading" :reserve-keyword="false" placeholder="请输入方案名称" size="small" style="width: 150px;"
-        clearable multiple filterable remote collapse-tags collapse-tags-tooltip @change="itemDesignOpChange">
+        clearable filterable remote collapse-tags collapse-tags-tooltip @change="itemDesignOpChange">
         <template #default="{ item }">
             <span style="margin-right: 8px">{{ item.label }}</span>
         </template>

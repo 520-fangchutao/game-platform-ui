@@ -115,7 +115,7 @@ export default {
             if (count > 10) {
                 this.splitItems(outputText, splitStrs, 10, ';')
                 splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
-                this.gameDesign.outputText = splitStrs.join('\n')
+                this.gameDesign.outputText = splitStrs.join('\n') + '\n'
             }else{
                 this.gameDesign.outputText = outputText.substring(0,outputText.length-1) + '\n'
             }
@@ -184,7 +184,8 @@ export default {
             let mailContent = this.mailContent
             let sendLable = this.sendLable
             let reason = this.reason
-            let items = this.gameDesign.designSelect.op.split('\n')
+            let designOp = this.gameDesign.designSelect.op
+            let items = designOp.substring(0,designOp.length-1).split('\n')
             let headers = []
             roleNames.forEach(roleName => {
                 let header = gameId + '\t' + 
@@ -201,10 +202,10 @@ export default {
             let outputDesignText = ''
             headers.forEach(header => {
                 items.forEach(item => {
-                    outputDesignText += header + '\t' + item
+                    outputDesignText += header + '\t' + item + '\n'
                 })
             })
-            this.outputText = outputDesignText
+            this.outputText += outputDesignText
         },
         generateBatchRows(itemThreshold) {
             //开始生成数据输出行方法
@@ -292,18 +293,19 @@ export default {
             let hasItemEq = false
             if (!(this.itemOrEq.op == null || this.itemOrEq.op.length === 0)) {
                 hasItemEq = true
-                if(!(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0)){
-                    hasDesign = true
-                    ElMessage.error('道具装备与预设方案只能二选一！')
-                    hasError = true
-                }
             }
-            if (this.itemOrEq.op == null || this.itemOrEq.op.length === 0) {
-                if(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0){
-                    ElMessage.error('道具装备与预设方案不能都为空！')
-                    hasError = true
-                }
+            if (!(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0)) {
+                hasDesign = true
             }
+            if(!hasDesign && !hasItemEq){
+                ElMessage.error('道具装备与预设方案不能都为空！')
+                hasError = true
+            }
+            if(hasDesign && hasItemEq){
+                ElMessage.error('道具装备与预设方案只能二选一！')
+                hasError = true
+            }
+            
             if (this.sender == null || this.sender.trim().length === 0) {
                 ElMessage.error('发件人不能为空！')
                 hasError = true
@@ -330,9 +332,9 @@ export default {
             if(hasItemEq){
                 this.generateBatchRows(10)
             }
-            // if(hasDesign){
-            //     this.generateDesignRows()
-            // }
+            if(hasDesign){
+                this.generateDesignRows()
+            }
             this.$refs.outerItemEqRef.clearSelectVal()
             ElMessage.success('添加数据成功！')
         },
