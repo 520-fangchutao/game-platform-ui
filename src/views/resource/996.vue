@@ -74,11 +74,11 @@ export default {
                 gameId: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[1]
             }
         },
-        searchItemParam(){
+        searchItemParam() {
             return { gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }
         },
         submitDesign() {
-            if(this.gameDesign.outputText.trim().length === 0){
+            if (this.gameDesign.outputText.trim().length === 0) {
                 ElMessage.info('没有可提交的方案行！')
                 return
             }
@@ -87,7 +87,7 @@ export default {
             let gameName = this.gameName.op.split('-')[0]
             this.$http.post(
                 "/Jiu96/saveItemDesign",
-                { gameName: gameName,batchReqName: batchReqName, batchReqText: batchReqText }
+                { gameName: gameName, batchReqName: batchReqName, batchReqText: batchReqText }
             ).then((res) => {
                 let respData = res.data
                 if (respData.code === 'S') {
@@ -101,6 +101,7 @@ export default {
             })
             this.gameDesign.name = ''
             this.$refs.outerItemEqDesignRef.clearSelectVal()
+            this.gameDesign.quantity = 1
             this.gameDesign.outputText = ''
             this.gameDesign.dialogVisible = false
         },
@@ -116,8 +117,8 @@ export default {
                 this.splitItems(outputText, splitStrs, 10, ';')
                 splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
                 this.gameDesign.outputText = splitStrs.join('\n') + '\n'
-            }else{
-                this.gameDesign.outputText = outputText.substring(0,outputText.length-1) + '\n'
+            } else {
+                this.gameDesign.outputText = outputText.substring(0, outputText.length - 1) + '\n'
             }
             ElMessage.success('压缩数据成功！')
         },
@@ -153,6 +154,7 @@ export default {
                 let itemRowStr = itemRow.join(';')
                 outputText = outputText + itemRowStr + '\n'
             })
+            this.$refs.outerItemEqDesignRef.clearSelectVal()
             this.gameDesign.outputText += outputText
         },
         gameZoneOpChange(gameZone) {
@@ -170,10 +172,10 @@ export default {
         itemOrEqOpChanDesign(itemOrEq) {
             this.gameDesign.itemOrEq = itemOrEq
         },
-        itemDesignOpChange(designSelect){
+        itemDesignOpChange(designSelect) {
             this.gameDesign.designSelect = designSelect
         },
-        generateDesignRows(){
+        generateDesignRows() {
             //开始生成数据输出行方法
             let gameId = this.gameName.op.split('-')[1]
             let zoneId = this.gameZone.op.split('-')[1]
@@ -185,18 +187,18 @@ export default {
             let sendLable = this.sendLable
             let reason = this.reason
             let designOp = this.gameDesign.designSelect.op
-            let items = designOp.substring(0,designOp.length-1).split('\n')
+            let items = designOp.substring(0, designOp.length - 1).split('\n')
             let headers = []
             roleNames.forEach(roleName => {
-                let header = gameId + '\t' + 
-                zoneId + '\t' + 
-                roleName + '\t' + 
-                bindStatus + '\t' + 
-                sender + '\t' + 
-                mailTitle + '\t' + 
-                mailContent + '\t' +
-                sendLable + '\t' +
-                reason + '\t'
+                let header = gameId + '\t' +
+                    zoneId + '\t' +
+                    roleName + '\t' +
+                    bindStatus + '\t' +
+                    sender + '\t' +
+                    mailTitle + '\t' +
+                    mailContent + '\t' +
+                    sendLable + '\t' +
+                    reason
                 headers.push(header)
             })
             let outputDesignText = ''
@@ -297,15 +299,15 @@ export default {
             if (!(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0)) {
                 hasDesign = true
             }
-            if(!hasDesign && !hasItemEq){
+            if (!hasDesign && !hasItemEq) {
                 ElMessage.error('道具装备与预设方案不能都为空！')
                 hasError = true
             }
-            if(hasDesign && hasItemEq){
+            if (hasDesign && hasItemEq) {
                 ElMessage.error('道具装备与预设方案只能二选一！')
                 hasError = true
             }
-            
+
             if (this.sender == null || this.sender.trim().length === 0) {
                 ElMessage.error('发件人不能为空！')
                 hasError = true
@@ -329,12 +331,13 @@ export default {
             if (hasError) {
                 return
             }
-            if(hasItemEq){
+            if (hasItemEq) {
                 this.generateBatchRows(10)
             }
-            if(hasDesign){
+            if (hasDesign) {
                 this.generateDesignRows()
             }
+            this.$refs.outerGameDesignRef.clearSelectVal()
             this.$refs.outerItemEqRef.clearSelectVal()
             ElMessage.success('添加数据成功！')
         },
@@ -437,13 +440,13 @@ export default {
                 "/Jiu96/batchItemSend",
                 { gameName: gameName, batchReqText: batchReqText }
             ).then((res) => {
-                //console.log('批量数据=>',res)
                 let respData = res.data
                 if (respData.code === 'S') {
                     let code = respData.data
                     this.batchProcCode = code
                     this.$refs.outerGameZoneRef.clearSelectVal()
                     this.$refs.outerItemEqRef.clearSelectVal()
+                    this.quantity = 1
                     this.inputRoles = ''
                     this.outputText = ''
                     ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
@@ -477,6 +480,16 @@ export default {
                 console.log(error)
                 ElMessage.error('意料之外的错误：' + error)
             })
+        },
+        copyOutput() {
+            this.$copyText(this.outputText).then(
+                function (e) {
+                    ElMessage.success('复制成功!')
+                },
+                function (e) {
+                    ElMessage.error('复制失败!')
+                }
+            )
         }
     }
 }
@@ -490,15 +503,18 @@ export default {
             </el-col>
             <el-col :span="6">
                 <span class="font-label">区服名称</span>
-                <GameZoneSelect ref="outerGameZoneRef" :search-zone-param="searchZoneParam()" @gameZoneOpChange="gameZoneOpChange" />
+                <GameZoneSelect ref="outerGameZoneRef" :search-zone-param="searchZoneParam()"
+                    @gameZoneOpChange="gameZoneOpChange" />
             </el-col>
             <el-col :span="4">
                 <span class="font-label">装备道具</span>
-                <ItemEqSelect ref="outerItemEqRef" :search-item-param="searchItemParam()" @itemOrEqOpChange="itemOrEqOpChange" />
+                <ItemEqSelect ref="outerItemEqRef" :search-item-param="searchItemParam()"
+                    @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
             <el-col :span="4">
                 <span class="font-label">方案</span>
-                <GameDesignSelect ref="outerGameDesignRef" :search-design-param="searchItemParam()" @itemDesignOpChange="itemDesignOpChange" />
+                <GameDesignSelect ref="outerGameDesignRef" :search-design-param="searchItemParam()"
+                    @itemDesignOpChange="itemDesignOpChange" />
             </el-col>
             <el-col :span="4">
                 <span class="font-label">数量</span>
@@ -538,7 +554,6 @@ export default {
         </el-row>
         <el-row>
             <el-col :span="5">
-                <!-- <span class="font-label">游戏角色列表</span> -->
                 <el-input v-model="inputRoles" style="width: 275px" :rows="5" type="textarea" resize="none"
                     placeholder="<游戏角色列表格式>&#10;角色名称A&#10;角色名称B&#10;角色名称C&#10;......" />
             </el-col>
@@ -559,6 +574,9 @@ export default {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="optimizeData">压缩数据</el-button>
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary" @click="copyOutput">复制输出</el-button>
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="submitBatchData">提交数据</el-button>
@@ -582,7 +600,8 @@ export default {
                             </el-col>
                             <el-col :span="5">
                                 <span class="font-label">装备道具</span>
-                                <ItemEqSelect ref="outerItemEqDesignRef" :search-item-param="searchItemParam()" @itemOrEqOpChange="itemOrEqOpChanDesign" />
+                                <ItemEqSelect ref="outerItemEqDesignRef" :search-item-param="searchItemParam()"
+                                    @itemOrEqOpChange="itemOrEqOpChanDesign" />
                             </el-col>
                             <el-col :span="4">
                                 <span class="font-label">数量</span>

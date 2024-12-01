@@ -16,6 +16,10 @@ export default{
         } 
     },
     methods: {
+        clearSelectVal() {
+            this.designSelect.op = []
+            this.itemDesignOpChange()
+        },
         searchItemDesign(query) {
             if (query !== "") {
                 this.designSelect.loading = true;
