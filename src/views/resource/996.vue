@@ -482,7 +482,16 @@ export default {
             })
         },
         copyOutput() {
-            this.$copyText(this.outputText).then(
+            let copyText = this.outputText
+            let rows = copyText.split('\n')
+            rows.splice(rows.length-1,1)
+            let newCopyText = ''
+            rows.forEach(row => {
+                let cols = row.split('\t')
+                cols.splice(3,0,' ')
+                newCopyText+=(cols.join('\t')+'\n')
+            })
+            this.$copyText(newCopyText).then(
                 function (e) {
                     ElMessage.success('复制成功!')
                 },
