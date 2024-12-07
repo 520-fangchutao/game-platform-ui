@@ -32,22 +32,10 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
                             </template>
                             <el-menu-item index="/resource/996">996平台</el-menu-item>
                         </el-sub-menu>
-                        <!-- <el-menu-item index="2">
-                            <el-icon><icon-menu /></el-icon>
-                            <span>Navigator Two</span>
+                        <el-menu-item index="/report/dailyData">
+                            <el-icon><Document /></el-icon>
+                            <span>数据报表</span>
                         </el-menu-item>
-                        <el-menu-item index="3" disabled>
-                            <el-icon>
-                                <document />
-                            </el-icon>
-                            <span>Navigator Three</span>
-                        </el-menu-item>
-                        <el-menu-item index="4">
-                            <el-icon>
-                                <setting />
-                            </el-icon>
-                            <span>Navigator Four</span>
-                        </el-menu-item> -->
                     </el-menu>
                 </el-aside>
                 <el-main>

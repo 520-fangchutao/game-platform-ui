@@ -646,13 +646,6 @@ export default {
 </template>
 
 <style lang="less" scoped>
-.font-label {
-    color: black;
-    font-family: 宋体;
-    font-size: 14px;
-    margin-right: 10px;
-}
-
 .clearAllItemsBtn {
     margin-bottom: 5px;
 }
