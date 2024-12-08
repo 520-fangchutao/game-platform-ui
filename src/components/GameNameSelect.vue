@@ -4,7 +4,7 @@ export default {
         return {
             gameName: {
                 op: '',
-                ops: [{ name: '【TT联运】创游传奇', id: 7064 }]
+                ops: [{ name: '创游传奇', id: 7064 }]
             }
         }
     },

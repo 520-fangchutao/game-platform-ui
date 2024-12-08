@@ -7,6 +7,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios';
 import VueClipboard from 'vue-clipboard2'
+import moment from 'moment';
 import * as common from './utils/common'
 import '@/styles/index.less'
 
@@ -18,6 +19,7 @@ const app = createApp(App)
 // 挂载axios到全局
 app.config.globalProperties.$http = axios
 app.config.globalProperties.$commUtil = common
+app.config.globalProperties.$moment = moment
 // 注册组件icon
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)

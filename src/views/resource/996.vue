@@ -649,8 +649,4 @@ export default {
 .clearAllItemsBtn {
     margin-bottom: 5px;
 }
-
-.el-row {
-    margin-bottom: 20px;
-}
 </style>
