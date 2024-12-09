@@ -10,7 +10,8 @@ export default {
             dialogVisible: false,
             fileName: '',
             uploadDate: '',
-            outputText: ''
+            outputText: '',
+            outputRes: ''
         }
     },
     methods: {
@@ -24,7 +25,7 @@ export default {
                 ElMessage.error(respData.msg)
             }
         },
-        queryUpload(){
+        queryUpload() {
             this.dialogVisible = true
             this.$http.get('/report/queryUploadGameList').then((res) => {
                 let respData = res.data
@@ -58,6 +59,7 @@ export default {
                 this.pullBtnStatus = false
                 let respData = res.data
                 if (respData.code === 'S') {
+                    this.outputRes = respData.data
                     this.$copyText(respData.data).then(
                         function (e) {
                             ElMessage.success('数据已经复制到剪切板！')
@@ -74,6 +76,16 @@ export default {
                 ElMessage.error('意料之外的错误：' + error)
             })
             ElMessage.success('拉取数据请求已经发出，请耐心等待处理结果！')
+        },
+        copyResult() {
+            this.$copyText(this.outputRes).then(
+                function (e) {
+                    ElMessage.success('数据已经复制到剪切板！')
+                },
+                function (e) {
+                    ElMessage.error('复制失败!')
+                }
+            )
         }
     },
     mounted() {
@@ -99,7 +111,7 @@ export default {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="queryUpload">查看上传列表</el-button>
-                <el-dialog v-model="dialogVisible" width="80%" title="查看上传">
+                <el-dialog v-model="dialogVisible" width="75%" title="查看上传">
                     <div class="queryGameListBox">
                         <el-row>
                             <el-col :span="5">
@@ -113,8 +125,8 @@ export default {
                         </el-row>
                         <el-row>
                             <el-col :span="24">
-                                <el-input v-model="outputText" style="width: 1350px" :rows="30"
-                                    type="textarea" resize="none" disabled />
+                                <el-input v-model="outputText" style="width: 1350px" :rows="30" type="textarea"
+                                    resize="none" disabled />
                             </el-col>
                         </el-row>
                     </div>
@@ -122,6 +134,14 @@ export default {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" :disabled="pullBtnStatus" @click="pullReportData">拉取数据</el-button>
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary" @click="copyResult">复制结果</el-button>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="24">
+                <el-input v-model="outputRes" style="width: 853px" :rows="30" type="textarea" resize="none" disabled />
             </el-col>
         </el-row>
     </div>
