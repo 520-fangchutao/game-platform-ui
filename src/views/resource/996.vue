@@ -5,6 +5,7 @@ import ItemEqSelect from '@/components/ItemEqSelect.vue';
 import GameNameSelect from '@/components/GameNameSelect.vue';
 import GameZoneSelect from '@/components/GameZoneSelect.vue';
 import GameDesignSelect from '@/components/GameDesignSelect.vue';
+import * as batchMailBy996 from '@/utils/batchMailBy996.js'
 export default {
     components: {
         ItemEqSelect,
@@ -68,6 +69,30 @@ export default {
         }
     },
     methods: {
+        getDesignReqRow(){
+            return {
+                gameDesign: this.gameDesign.name,
+                itemOrEq: this.gameDesign.itemOrEq.op,
+                quantity: this.gameDesign.quantity
+            }
+        },
+        getDataReqRow() {
+            return {
+                gameName: this.gameName.op,
+                gameZone: this.gameZone.op,
+                bindRadio: this.bindRadio,
+                itemOrEq: this.itemOrEq.op,
+                designName: this.gameDesign.designSelect.op,
+                sender: this.sender,
+                mailTitle: this.mailTitle,
+                mailContent: this.mailContent,
+                sendLable: this.sendLable,
+                reason: this.reason,
+                quantity: this.quantity,
+                inputRoles: this.inputRoles,
+                outputText: this.outputText
+            }
+        },
         searchZoneParam() {
             return {
                 gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0],
@@ -123,18 +148,7 @@ export default {
             ElMessage.success('压缩数据成功！')
         },
         addDesign() {
-            let hasError = false
-            if (this.gameDesign.name.trim().length === 0) {
-                ElMessage.error('方案名称不能为空！')
-                hasError = true
-            }
-            if (this.gameDesign.itemOrEq.op.length === 0) {
-                ElMessage.error('道具不能为空！')
-                hasError = true
-            }
-            if (hasError) {
-                return
-            }
+            if(batchMailBy996.checkDesignRowNotNull(this.getDesignReqRow())) return
             let itemQty = this.gameDesign.quantity
             let selectedItems = this.gameDesign.itemOrEq.op
             let itemRow = []
@@ -175,84 +189,6 @@ export default {
         itemDesignOpChange(designSelect) {
             this.gameDesign.designSelect = designSelect
         },
-        generateDesignRows() {
-            //开始生成数据输出行方法
-            let gameId = this.gameName.op.split('-')[1]
-            let zoneId = this.gameZone.op.split('-')[1]
-            let roleNames = this.inputRoles.split('\n')
-            let bindStatus = this.bindRadio
-            let sender = this.sender
-            let mailTitle = this.mailTitle
-            let mailContent = this.mailContent
-            let sendLable = this.sendLable
-            let reason = this.reason
-            let designOp = this.gameDesign.designSelect.op
-            let items = designOp.substring(0, designOp.length - 1).split('\n')
-            let headers = []
-            roleNames.forEach(roleName => {
-                let header = gameId + '\t' +
-                    zoneId + '\t' +
-                    roleName + '\t' +
-                    bindStatus + '\t' +
-                    sender + '\t' +
-                    mailTitle + '\t' +
-                    mailContent + '\t' +
-                    sendLable + '\t' +
-                    reason
-                headers.push(header)
-            })
-            let outputDesignText = ''
-            headers.forEach(header => {
-                items.forEach(item => {
-                    outputDesignText += header + '\t' + item + '\n'
-                })
-            })
-            this.outputText += outputDesignText
-        },
-        generateBatchRows(itemThreshold) {
-            //开始生成数据输出行方法
-            let gameId = this.gameName.op.split('-')[1]
-            let zoneId = this.gameZone.op.split('-')[1]
-            //此处角色名
-            let bindStatus = this.bindRadio
-            let sender = this.sender
-            let mailTitle = this.mailTitle
-            let mailContent = this.mailContent
-            let sendLable = this.sendLable
-            let reason = this.reason
-            let itemArr = this.itemOrEq.op
-            let itemQty = this.quantity
-
-            //let itemThreshold = 10
-            let itemRow = []
-            let itemRows = []
-            itemArr.forEach(i => {
-                let kv = i.split('-')
-                let itemId = kv[1]
-                let item = itemId + '#' + itemQty
-                if (itemRow.length >= itemThreshold) {
-                    itemRows.push(itemRow)
-                    itemRow = []
-                }
-                itemRow.push(item)
-            })
-            itemRows.push(itemRow)
-
-            let outputRow = [bindStatus, sender, mailTitle, mailContent, sendLable, reason]
-            let outputRowStr = outputRow.join('\t')
-            let outputRowStrs = []
-            itemRows.forEach(itemRow => {
-                let itemRowStr = itemRow.join(';')
-                outputRowStrs.push(outputRowStr + '\t' + itemRowStr)
-            })
-            let roleNames = this.inputRoles.split('\n')
-            roleNames.forEach(roleName => {
-                let gzr = gameId + '\t' + zoneId + '\t' + roleName
-                outputRowStrs.forEach(row => {
-                    this.outputText += (gzr + '\t' + row + '\n')
-                })
-            })
-        },
         clearAllItems() {
             let gameName = this.gameName.op.split('-')[0];
             this.$http.get(
@@ -282,61 +218,11 @@ export default {
             }
         },
         addData() {
-            let hasError = false
-            if (this.gameName.op == null || this.gameName.op.trim().length === 0) {
-                ElMessage.error('游戏名称不能为空！')
-                hasError = true
-            }
-            if (this.gameZone.op == null || this.gameZone.op.trim().length === 0) {
-                ElMessage.error('游戏区服不能为空！')
-                hasError = true
-            }
-            let hasDesign = false
-            let hasItemEq = false
-            if (!(this.itemOrEq.op == null || this.itemOrEq.op.length === 0)) {
-                hasItemEq = true
-            }
-            if (!(this.gameDesign.designSelect.op == null || this.gameDesign.designSelect.op.length === 0)) {
-                hasDesign = true
-            }
-            if (!hasDesign && !hasItemEq) {
-                ElMessage.error('道具装备与预设方案不能都为空！')
-                hasError = true
-            }
-            if (hasDesign && hasItemEq) {
-                ElMessage.error('道具装备与预设方案只能二选一！')
-                hasError = true
-            }
-
-            if (this.sender == null || this.sender.trim().length === 0) {
-                ElMessage.error('发件人不能为空！')
-                hasError = true
-            }
-            if (this.mailTitle == null || this.mailTitle.trim().length === 0) {
-                ElMessage.error('邮件标题不能为空！')
-                hasError = true
-            }
-            if (this.mailContent == null || this.mailContent.trim().length === 0) {
-                ElMessage.error('邮件内容不能为空！')
-                hasError = true
-            }
-            if (this.reason == null || this.reason.trim().length === 0) {
-                ElMessage.error('申请理由不能为空！')
-                hasError = true
-            }
-            if (this.inputRoles == null || this.inputRoles.trim().length === 0) {
-                ElMessage.error('角色列表不能为空！')
-                hasError = true
-            }
-            if (hasError) {
-                return
-            }
-            if (hasItemEq) {
-                this.generateBatchRows(10)
-            }
-            if (hasDesign) {
-                this.generateDesignRows()
-            }
+            let dataReqRow = this.getDataReqRow()
+            let {hasError,hasDesign,hasItemEq} = batchMailBy996.checkInputRowNotNull(dataReqRow)
+            if (hasError) return
+            if (hasItemEq) this.outputText = batchMailBy996.generateBatchRows(10,dataReqRow)
+            if (hasDesign) this.outputText = batchMailBy996.generateDesignRows(dataReqRow)
             this.$refs.outerGameDesignRef.clearSelectVal()
             this.$refs.outerItemEqRef.clearSelectVal()
             ElMessage.success('添加数据成功！')

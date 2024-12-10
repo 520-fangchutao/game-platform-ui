@@ -1,4 +1,3 @@
-import { ElMessage } from "element-plus";
 export function countChar(sourceStr, countChar) {
   let matches = sourceStr.match(new RegExp(`${countChar}`, `g`))
   return matches ? matches.length : 0;
@@ -33,4 +32,8 @@ export function isEmpty(value) {
     default:
       return false;
   }
+}
+
+export function isNotEmpty(value){
+  return !isEmpty(value)
 }

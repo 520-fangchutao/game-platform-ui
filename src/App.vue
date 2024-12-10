@@ -1,4 +1,5 @@
-<script setup>
+<script>
+import {Present,Document} from '@element-plus/icons-vue'
 // 解决ERROR ResizeObserver loop completed with undelivered notifications.
 // 重写ResizeObserver的构造函数，并在其中定义并调用防抖函数
 window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
@@ -13,6 +14,12 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
             }, 16)
         }
         super(debouncedCallback)
+    }
+}
+export default {
+    components: {
+        Present,
+        Document
     }
 }
 </script>

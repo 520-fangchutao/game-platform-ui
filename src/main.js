@@ -5,7 +5,7 @@ import store from './store'
 //import ElementPlus from 'element-plus'
 import ElementPlus from './plugins/elementplusui.js'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+//import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios';
 import VueClipboard from 'vue-clipboard2'
 import moment from 'moment';
@@ -22,9 +22,9 @@ app.config.globalProperties.$http = axios
 app.config.globalProperties.$commUtil = common
 app.config.globalProperties.$moment = moment
 // 注册组件icon
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component)
-}
+// for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+//     app.component(key, component)
+// }
 // 挂载到vue
 app.use(ElementPlus, {locale: zhCn})
 app.use(router)
