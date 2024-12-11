@@ -9,7 +9,7 @@ export function recursionIndex(row, begin, limit, splitChar) {
   if (limit === 1) {
     return index
   }
-  return this.recursionIndex(row, index + 1, limit - 1, splitChar)
+  return recursionIndex(row, index + 1, limit - 1, splitChar)
 }
 
 export function distinctArr(srcArr, discArr) {

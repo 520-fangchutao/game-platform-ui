@@ -4,6 +4,7 @@ const routes = [
   {
     path: '/resource/996',
     name: '996',
+    //component: () => import('@/views/test.vue')
     component: () => import('@/views/resource/996.vue')
   },
   {

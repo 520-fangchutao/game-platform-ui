@@ -1,4 +1,4 @@
-import { isEmpty, isNotEmpty } from '@/utils/common.js'
+import { isEmpty, isNotEmpty,recursionIndex,distinctArr,countChar } from '@/utils/common.js'
 import { ElMessage } from 'element-plus'
 
 export function checkDesignRowNotNull(designReqRow) {
@@ -144,4 +144,135 @@ export function generateDesignRows(dataReqRow) {
     })
     dataReqRow.outputText += outputDesignText
     return dataReqRow.outputText
+}
+
+export function genItemDesign(designReqRow) {
+    let itemQty = designReqRow.quantity
+    let selectedItems = designReqRow.itemOrEq
+    let itemRow = []
+    let itemRows = []
+    selectedItems.forEach(i => {
+        let itemId = i.split('-')[1]
+        let item = itemId + '#' + itemQty
+        if (itemRow.length >= 10) {
+            itemRows.push(itemRow)
+            itemRow = []
+        }
+        itemRow.push(item)
+    })
+    itemRows.push(itemRow)
+    let outputText = ''
+    itemRows.forEach(itemRow => {
+        let itemRowStr = itemRow.join(';')
+        outputText = outputText + itemRowStr + '\n'
+    })
+    designReqRow.outputText += outputText
+    return designReqRow.outputText
+}
+
+export function splitItems(splitStr, splitStrs, divisor, separator) {
+    let count = countChar(splitStr, separator) + 1
+    let splitCount = Math.floor(count / divisor)
+    if (count % divisor === 0) {
+        splitCount = splitCount - 1
+    }
+    for (let i = 0; i < splitCount; i++) {
+        let splitIdx = recursionIndex(splitStr, 0, divisor, separator) + 1
+        let splitPart = splitStr.substring(0, splitIdx)
+        splitStrs.push(splitPart)
+        splitStr = splitStr.substring(splitIdx)
+    }
+    splitStrs.push(splitStr)
+}
+
+export function procExceedPart(e) {
+    let headIdx = recursionIndex(e, 0, 9, '\t')
+    let headStr = e.substring(0, headIdx + 1)
+    let splitStr = e.substring(headIdx + 1)
+    let splitStrs = []
+    splitItems(splitStr, splitStrs, 10, ';')
+    splitStrs.push(headStr)
+    return splitStrs
+}
+
+export function optimizeData(dataReqRow) {
+    if (isEmpty(dataReqRow.outputText)) {
+        ElMessage.info('没有可压缩的数据行！')
+        return
+    }
+    let rows = dataReqRow.outputText.substring(0,dataReqRow.outputText.length - 1).split('\n')
+    let sourceRows = []
+    let distinctRows = []
+    rows.forEach(row => {
+        let index = recursionIndex(row, 0, 9, '\t')
+        let key = row.substring(0, index + 1)
+        sourceRows.push(key)
+    })
+    let rowStrs = []
+    distinctArr(sourceRows, distinctRows)
+
+    //合并同类项
+    distinctRows.forEach((key, keyIdx) => {
+        let first = true
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].includes(key)) {
+                let value = rows[i].substring(key.length)
+                if (first) {
+                    rowStrs.push(key + value)
+                    first = false
+                } else {
+                    rowStrs[keyIdx] = rowStrs[keyIdx] + ';' + value
+                }
+                rows.splice(i, 1)
+                i--
+            }
+        }
+    })
+
+    //分离超长数据，跟正常数据
+    let exceedLenStrs = []
+    for (let i = 0; i < rowStrs.length; i++) {
+        let count = countChar(rowStrs[i], '#')
+        if (count > 10) {
+            exceedLenStrs.push(rowStrs[i])
+            rowStrs.splice(i, 1)
+            i--
+        }
+    }
+    //处理超长数据为正常数据
+    exceedLenStrs.forEach(e => {
+        let splitStrs = procExceedPart(e)
+        let pos = splitStrs.length - 1
+        let headStr = splitStrs[pos]
+        splitStrs.splice(pos, 1)
+        pos = splitStrs.length - 1
+        splitStrs.forEach((sp, idx) => {
+            if (idx === pos) {
+                rowStrs.push(headStr + sp)
+            } else {
+                rowStrs.push(headStr + sp.substring(0, sp.length - 1))
+            }
+        })
+    })
+    ElMessage.success('压缩数据成功！')
+    return rowStrs.join('\n') + '\n'
+}
+
+export function optimizeDesign(designReqRow) {
+    if (isEmpty(designReqRow.outputText)) {
+        ElMessage.info('没有可压缩的数据行！')
+        return
+    }
+    let outputText = designReqRow.outputText.split('\n').join(';')
+    let count = countChar(outputText, '#')
+    let splitStrs = []
+    if (count > 10) {
+        splitItems(outputText, splitStrs, 10, ';')
+        splitStrs = splitStrs.map(row => row.substring(0, row.length - 1))
+        designReqRow.outputText = splitStrs.join('\n') + '\n'
+    } else {
+        designReqRow.outputText = outputText.substring(0, outputText.length - 1) + '\n'
+    }
+    ElMessage.success('压缩数据成功！')
+    return designReqRow.outputText
 }
