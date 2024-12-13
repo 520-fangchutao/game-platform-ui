@@ -30,7 +30,7 @@ export default {
             <el-container>
                 <el-aside width="200px">
                     <el-menu router>
-                        <!-- <el-sub-menu index="1">
+                        <el-sub-menu index="1">
                             <template #title>
                                 <el-icon>
                                     <Present />
@@ -38,19 +38,19 @@ export default {
                                 <span>资源发放</span>
                             </template>
                             <el-menu-item index="/resource/996">996平台</el-menu-item>
-                        </el-sub-menu> -->
-                        <el-menu-item index="/resource/996">
+                        </el-sub-menu>
+                        <!-- <el-menu-item index="/resource/996">
                             <el-icon><Present /></el-icon>
                             <span>资源发放</span>
-                        </el-menu-item>
+                        </el-menu-item> -->
                         <el-menu-item index="/report/dailyData">
                             <el-icon><Document /></el-icon>
                             <span>数据报表</span>
                         </el-menu-item>
-                        <el-menu-item index="/jiu96">
+                        <!-- <el-menu-item index="/jiu96">
                             <el-icon><Document /></el-icon>
                             <span>测试页</span>
-                        </el-menu-item>
+                        </el-menu-item> -->
                     </el-menu>
                 </el-aside>
                 <el-main>

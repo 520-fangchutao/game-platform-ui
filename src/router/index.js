@@ -11,11 +11,11 @@ const routes = [
     name: 'dailyData',
     component: () => import('@/views/report/dailyData.vue')
   },
-  {
-    path: '/jiu96',
-    name: 'jiu96',
-    component: () => import('@/views/jiu96.vue')
-  }
+  // {
+  //   path: '/jiu96',
+  //   name: 'jiu96',
+  //   component: () => import('@/views/jiu96.vue')
+  // }
 ]
 
 const router = createRouter({

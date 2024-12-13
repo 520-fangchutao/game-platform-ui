@@ -276,7 +276,7 @@ export default {
                 <span class="font-label">游戏名称</span>
                 <GameNameSelect @gameNameOpChange="gameNameOpChange" />
             </el-col>
-            <!-- <el-col :span="6">
+            <el-col :span="6">
                 <span class="font-label">区服名称</span>
                 <GameZoneSelect ref="outerGameZoneRef" :search-zone-param="searchZoneParam()"
                     @gameZoneOpChange="gameZoneOpChange" />
@@ -286,7 +286,7 @@ export default {
                 <ItemEqSelect ref="outerItemEqRef" :search-item-param="searchItemParam()"
                     @itemOrEqOpChange="itemOrEqOpChange" />
             </el-col>
-            <el-col :span="4">
+            <!-- <el-col :span="4">
                 <span class="font-label">方案</span>
                 <GameDesignSelect ref="outerGameDesignRef" :search-design-param="searchItemParam()"
                     @itemDesignOpChange="itemDesignOpChange" />
