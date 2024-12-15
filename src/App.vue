@@ -71,6 +71,11 @@ export default {
     overflow: hidden;
 }
 
+.el-main {
+    margin: 0;
+    padding: 0;
+}
+
 .el-header {
     background-color: #4091ff;
     line-height: 60px;
@@ -81,5 +86,6 @@ export default {
 
 .el-aside {
     border: 1px solid grey;
+    border-top-style: none;
 }
 </style>

@@ -1,275 +1,266 @@
-<script>
+<script setup>
+import { ref,getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios';
-import ItemEqSelect from '@/components/ItemEqSelect.vue';
-import GameNameSelect from '@/components/GameNameSelect.vue';
-import GameZoneSelect from '@/components/GameZoneSelect.vue';
-import GameDesignSelect from '@/components/GameDesignSelect.vue';
+import axios from 'axios'
+import ItemEqSelect from '@/components/ItemEqSelect.vue'
+import GameNameSelect from '@/components/GameNameSelect.vue'
+import GameZoneSelect from '@/components/GameZoneSelect.vue'
+import GameDesignSelect from '@/components/GameDesignSelect.vue'
 import * as batchMailBy996 from '@/utils/batchMailBy996.js'
-export default {
-    components: {
-        ItemEqSelect,
-        GameNameSelect,
-        GameZoneSelect,
-        GameDesignSelect
+const globalProperties = getCurrentInstance().appContext.config.globalProperties
+let gameName = ref({
+    op: '',
+    ops: []
+})
+let gameZone = ref({
+    op: '',
+    ops: [],
+    serverRadio: '2',
+    loading: false
+})
+let itemOrEq = ref({
+    op: [],
+    ops: [],
+    loading: false
+})
+let gameDesign = ref({
+    name: '',
+    designSelect: {
+        op: [],
+        ops: [],
+        loading: false
     },
-    data() {
-        return {
-            gameName: {
-                op: '',
-                ops: []
-            },
-            gameZone: {
-                op: '',
-                ops: [],
-                serverRadio: '2',
-                loading: false
-            },
-            itemOrEq: {
-                op: [],
-                ops: [],
-                loading: false
-            },
-            gameDesign: {
-                name: '',
-                designSelect: {
-                    op: [],
-                    ops: [],
-                    loading: false
-                },
-                itemOrEq: {
-                    op: [],
-                    ops: [],
-                    loading: false
-                },
-                gameName: {
-                    op: '',
-                    ops: []
-                },
-                quantity: 1,
-                dialogVisible: false,
-                outputText: '',
-            },
-            quantity: 1,
-            bindRadio: '1',
-            sender: 'GM',
-            mailTitle: '1',
-            mailContent: '1',
-            sendLable: 'bug补偿',
-            sendLableOps: [{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }],
-            reason: 'GS资源申请',
-            uploadUrl: '',
-            uploadParam: {
-                gameName: ''
-            },
-            uploadList: [],
-            inputRoles: '',
-            outputText: '',
-            batchProcCode: ''
-        }
+    itemOrEq: {
+        op: [],
+        ops: [],
+        loading: false
     },
-    methods: {
-        getDesignReqRow(){
-            return {
-                gameDesign: this.gameDesign.name,
-                itemOrEq: this.gameDesign.itemOrEq.op,
-                quantity: this.gameDesign.quantity,
-                outputText: this.gameDesign.outputText
-            }
-        },
-        getDataReqRow() {
-            return {
-                gameName: this.gameName.op,
-                gameZone: this.gameZone.op,
-                bindRadio: this.bindRadio,
-                itemOrEq: this.itemOrEq.op,
-                designName: this.gameDesign.designSelect.op,
-                sender: this.sender,
-                mailTitle: this.mailTitle,
-                mailContent: this.mailContent,
-                sendLable: this.sendLable,
-                reason: this.reason,
-                quantity: this.quantity,
-                inputRoles: this.inputRoles,
-                outputText: this.outputText
-            }
-        },
-        searchZoneParam() {
-            return {
-                gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0],
-                gameId: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[1]
-            }
-        },
-        searchItemParam() {
-            return { gameName: (this.gameName.op === undefined) ? '' : this.gameName.op.split('-')[0] }
-        },
-        submitDesign() {
-            if (this.gameDesign.outputText.trim().length === 0) {
-                ElMessage.info('没有可提交的方案行！')
-                return
-            }
-            let batchReqName = this.gameDesign.name
-            let batchReqText = this.gameDesign.outputText
-            let gameName = this.gameName.op.split('-')[0]
-            this.$http.post(
-                "/Jiu96/saveItemDesign",
-                { gameName: gameName, batchReqName: batchReqName, batchReqText: batchReqText }
-            ).then((res) => {
-                let respData = res.data
-                if (respData.code === 'S') {
-                    ElMessage.success(respData.data)
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.error(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-            this.gameDesign.name = ''
-            this.$refs.outerItemEqDesignRef.clearSelectVal()
-            this.gameDesign.quantity = 1
-            this.gameDesign.outputText = ''
-            this.gameDesign.dialogVisible = false
-        },
-        optimizeDesign(){
-            this.gameDesign.outputText = batchMailBy996.optimizeDesign(this.getDesignReqRow())
-        },
-        addDesign() {
-            let designReqRow = this.getDesignReqRow()
-            if(batchMailBy996.checkDesignRowNotNull(designReqRow)) return
-            this.gameDesign.outputText = batchMailBy996.genItemDesign(designReqRow)
-            this.$refs.outerItemEqDesignRef.clearSelectVal()
-        },
-        gameZoneOpChange(gameZone) {
-            this.gameZone = gameZone
-        },
-        gameNameOpChange(gameName) {
-            this.gameName = gameName
-        },
-        gameNameOpChanDesign(gameName) {
-            this.gameDesign.gameName = gameName
-        },
-        itemOrEqOpChange(itemOrEq) {
-            this.itemOrEq = itemOrEq
-        },
-        itemOrEqOpChanDesign(itemOrEq) {
-            this.gameDesign.itemOrEq = itemOrEq
-        },
-        itemDesignOpChange(designSelect) {
-            this.gameDesign.designSelect = designSelect
-        },
-        clearAllItems() {
-            let gameName = this.gameName.op.split('-')[0];
-            this.$http.get(
-                `/Jiu96/clearAll?gameName=${gameName}`
-            ).then((res) => {
-                let respData = res.data
-                if (respData.code === 'S') {
-                    ElMessage.success(respData.data)
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.log(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-        },
-        clickUpload() {
-            //上传提交参数
-            this.uploadParam.gameName = this.gameName.op.split('-')[0]
-            this.uploadUrl = axios.defaults.baseURL + '/Jiu96/uploadItems'
-        },
-        uploadSuccess(respData) {
-            if (respData.code === 'S') {
-                ElMessage.success(respData.data)
-            } else {
-                ElMessage.error(respData.msg)
-            }
-        },
-        addData() {
-            let dataReqRow = this.getDataReqRow()
-            let {hasError,hasDesign,hasItemEq} = batchMailBy996.checkInputRowNotNull(dataReqRow)
-            if (hasError) return
-            if (hasItemEq) this.outputText = batchMailBy996.generateBatchRows(10,dataReqRow)
-            if (hasDesign) this.outputText = batchMailBy996.generateDesignRows(dataReqRow)
-            this.$refs.outerGameDesignRef.clearSelectVal()
-            this.$refs.outerItemEqRef.clearSelectVal()
-            ElMessage.success('添加数据成功！')
-        },
-        optimizeData(){
-            this.outputText = batchMailBy996.optimizeData(this.getDataReqRow())
-        },
-        submitBatchData() {
-            if (this.outputText.trim().length === 0) {
-                ElMessage.info('没有可供提交的数据行！')
-                return
-            }
-            let gameName = this.gameName.op.split('-')[0];
-            let batchReqText = this.outputText;
-            this.$http.post(
-                "/Jiu96/batchItemSend",
-                { gameName: gameName, batchReqText: batchReqText }
-            ).then((res) => {
-                let respData = res.data
-                if (respData.code === 'S') {
-                    let code = respData.data
-                    this.batchProcCode = code
-                    this.$refs.outerGameZoneRef.clearSelectVal()
-                    this.$refs.outerItemEqRef.clearSelectVal()
-                    this.quantity = 1
-                    this.inputRoles = ''
-                    this.outputText = ''
-                    ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.error(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-        },
-        queryBatchResult() {
-            if (this.batchProcCode.length === 0) {
-                ElMessage.info('该页面暂无批量申请记录！')
-                return
-            }
-            let gameName = this.gameName.op.split('-')[0];
-            let code = this.batchProcCode
-            this.$http.get(
-                `/Jiu96/queryBatchMailStatus?gameName=${gameName}&code=${code}`
-            ).then((res) => {
-                let respData = res.data
-                if (respData.code === 'S') {
-                    let data = respData.data
-                    ElMessage.success(`处理码:${this.batchProcCode}，总数:${data.total}，成功数:${data.successCount}，失败数:${data.errorCount}`)
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.log(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-        },
-        copyOutput() {
-            let copyText = this.outputText
-            let rows = copyText.split('\n')
-            rows.splice(rows.length-1,1)
-            let newCopyText = ''
-            rows.forEach(row => {
-                let cols = row.split('\t')
-                cols.splice(3,0,' ')
-                newCopyText+=(cols.join('\t')+'\n')
-            })
-            this.$copyText(newCopyText).then(
-                function (e) {
-                    ElMessage.success('复制成功!')
-                },
-                function (e) {
-                    ElMessage.error('复制失败!')
-                }
-            )
-        }
+    gameName: {
+        op: '',
+        ops: []
+    },
+    quantity: 1,
+    dialogVisible: false,
+    outputText: '',
+})
+let quantity = ref(1)
+let bindRadio = ref('1')
+let sender = ref('GM')
+let mailTitle = ref('1')
+let mailContent = ref('1')
+let sendLable = ref('bug补偿')
+let sendLableOps = ref([{ id: 1, value: 'bug补偿' }, { id: 2, value: '反馈问题奖励' }, { id: 3, value: '官方通知' }, { id: 4, value: '活动奖励' }])
+let reason = ref('GS资源申请')
+let uploadUrl = ref('')
+let uploadParam = ref({
+    gameName: ''
+})
+let uploadList = ref([])
+let inputRoles = ref('')
+let outputText = ref('')
+let batchProcCode = ref('')
+const outerItemEqDesignRef = ref(null)
+const outerGameDesignRef = ref(null)
+const outerItemEqRef = ref(null)
+const outerGameZoneRef = ref(null)
+function getDesignReqRow() {
+    return {
+        gameDesign: gameDesign.value.name,
+        itemOrEq: gameDesign.value.itemOrEq.op,
+        quantity: gameDesign.value.quantity,
+        outputText: gameDesign.value.outputText
     }
+}
+function getDataReqRow() {
+    return {
+        gameName: gameName.value.op,
+        gameZone: gameZone.value.op,
+        bindRadio: bindRadio.value,
+        itemOrEq: itemOrEq.value.op,
+        designName: gameDesign.value.designSelect.op,
+        sender: sender.value,
+        mailTitle: mailTitle.value,
+        mailContent: mailContent.value,
+        sendLable: sendLable.value,
+        reason: reason.value,
+        quantity: quantity.value,
+        inputRoles: inputRoles.value,
+        outputText: outputText.value
+    }
+}
+function searchZoneParam() {
+    let returnParam = { gameName: '', gameId: '' }
+    let paramNotNull = globalProperties.$commUtil.isNotEmpty(gameName.value.op)
+    if (paramNotNull) {
+        returnParam.gameName = gameName.value.op.split('-')[0]
+        returnParam.gameId = gameName.value.op.split('-')[1]
+    }
+    return returnParam
+}
+function searchItemParam() {
+    let returnParam = { gameName: '' }
+    let paramNotNull = globalProperties.$commUtil.isNotEmpty(gameName.value.op)
+    if (paramNotNull) returnParam.gameName = gameName.value.op.split('-')[0]
+    return returnParam
+}
+function submitDesign() {
+    if (globalProperties.$commUtil.isEmpty(gameDesign.value.outputText)) {
+        ElMessage.info('没有可提交的方案行！')
+        return
+    }
+    let brn = gameDesign.value.name
+    let brt = gameDesign.value.outputText
+    let gn = gameName.value.op.split('-')[0]
+    globalProperties.$http.post(
+        "/Jiu96/saveItemDesign",
+        { gameName: gn, batchReqName: brn, batchReqText: brt }
+    ).then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            ElMessage.success(respData.data)
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.error(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+    gameDesign.value.name = ''
+    outerItemEqDesignRef.value.clearSelectVal()
+    gameDesign.value.quantity = 1
+    gameDesign.value.outputText = ''
+    gameDesign.value.dialogVisible = false
+}
+function optimizeDesign() {
+    gameDesign.value.outputText = batchMailBy996.optimizeDesign(getDesignReqRow())
+}
+function addData() {
+    let dataReqRow = getDataReqRow()
+    let { hasError, hasDesign, hasItemEq } = batchMailBy996.checkInputRowNotNull(dataReqRow)
+    if (hasError) return
+    if (hasItemEq) outputText.value = batchMailBy996.generateBatchRows(10, dataReqRow)
+    if (hasDesign) outputText.value = batchMailBy996.generateDesignRows(dataReqRow)
+    outerGameDesignRef.value.clearSelectVal()
+    outerItemEqRef.value.clearSelectVal()
+    ElMessage.success('添加数据成功！')
+}
+function addDesign() {
+    let designReqRow = getDesignReqRow()
+    if (batchMailBy996.checkDesignRowNotNull(designReqRow)) return
+    gameDesign.value.outputText = batchMailBy996.genItemDesign(designReqRow)
+    outerItemEqDesignRef.value.clearSelectVal()
+}
+function optimizeData() {
+    outputText.value = batchMailBy996.optimizeData(getDataReqRow())
+}
+function clearAllItems() {
+    let gn = gameName.value.op.split('-')[0];
+    globalProperties.$http.get(
+        `/Jiu96/clearAll?gameName=${gn}`
+    ).then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            ElMessage.success(respData.data)
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.log(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+}
+function clickUpload() {
+    uploadParam.value.gameName = gameName.value.op.split('-')[0]
+    uploadUrl.value = axios.defaults.baseURL + '/Jiu96/uploadItems'
+}
+function uploadSuccess(respData) {
+    if (respData.code === 'S') {
+        ElMessage.success(respData.data)
+    } else {
+        ElMessage.error(respData.msg)
+    }
+}
+function submitBatchData() {
+    if (globalProperties.$commUtil.isEmpty(outputText.value)) {
+        ElMessage.info('没有可供提交的数据行！')
+        return
+    }
+    let gn = gameName.value.op.split('-')[0];
+    let brt = outputText.value;
+    globalProperties.$http.post(
+        "/Jiu96/batchItemSend",
+        { gameName: gn, batchReqText: brt }
+    ).then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            let code = respData.data
+            batchProcCode.value = code
+            outerGameZoneRef.value.clearSelectVal()
+            outerItemEqRef.value.clearSelectVal()
+            quantity.value = 1
+            inputRoles.value = ''
+            outputText.value = ''
+            ElMessage.success('邮件申请已经发送，点击<处理结果>按钮查询最近的邮件申请处理进度(' + code + ')')
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.error(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+}
+function queryBatchResult() {
+    if (globalProperties.$commUtil.isEmpty(batchProcCode.value)) {
+        ElMessage.info('该页面暂无批量申请记录！')
+        return
+    }
+    let gn = gameName.value.op.split('-')[0];
+    let code = batchProcCode.value
+    globalProperties.$http.get(
+        `/Jiu96/queryBatchMailStatus?gameName=${gn}&code=${code}`
+    ).then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            let data = respData.data
+            ElMessage.success(`处理码:${batchProcCode.value}，总数:${data.total}，成功数:${data.successCount}，失败数:${data.errorCount}`)
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.log(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+}
+function copyOutput() {
+    let copyText = outputText.value
+    let rows = copyText.split('\n')
+    rows.splice(rows.length - 1, 1)
+    let newCopyText = ''
+    rows.forEach(row => {
+        let cols = row.split('\t')
+        cols.splice(3, 0, ' ')
+        newCopyText += (cols.join('\t') + '\n')
+    })
+    //调用复制方法
+    globalProperties.$commUtil.copy(newCopyText)
+}
+function gameZoneOpChange(newGameZone) {
+    gameZone.value = newGameZone
+}
+function gameNameOpChange(newGameName) {
+    gameName.value = newGameName
+}
+function gameNameOpChanDesign(newGameName) {
+    gameDesign.value.gameName = newGameName
+}
+function itemOrEqOpChange(newItemOrEq) {
+    itemOrEq.value = newItemOrEq
+}
+function itemOrEqOpChanDesign(newItemOrEq) {
+    gameDesign.value.itemOrEq = newItemOrEq
+}
+function itemDesignOpChange(newDesignSelect) {
+    gameDesign.value.designSelect = newDesignSelect
 }
 </script>
 <template>
@@ -415,6 +406,9 @@ export default {
 </template>
 
 <style lang="less" scoped>
+.mailReqBox {
+    padding: 15px;
+}
 .clearAllItemsBtn {
     margin-bottom: 5px;
 }

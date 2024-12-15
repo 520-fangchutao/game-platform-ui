@@ -18,6 +18,7 @@ import {
     ElUpload,
     ElMessage,
     ElDialog,
+    ElConfigProvider,
     ElDatePicker,
     ElIcon
 } from "element-plus"
@@ -42,6 +43,7 @@ export default (app) => {
     app.use(ElUpload)
     app.use(ElMessage)
     app.use(ElDialog)
+    app.use(ElConfigProvider)
     app.use(ElDatePicker)
     app.use(ElIcon)
 }

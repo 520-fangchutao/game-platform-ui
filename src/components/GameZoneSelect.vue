@@ -1,68 +1,7 @@
-<!-- <script>
-import { ElMessage } from 'element-plus'
-export default {
-    data() {
-        return {
-            gameZone: {
-                op: '',
-                ops: [],
-                serverRadio: '2',
-                loading: false
-            }
-        }
-    },
-    props: {
-        searchZoneParam: {
-            type: Object,
-            required: true
-        }
-    },
-    methods: {
-        clearSelectVal() {
-            this.gameZone.op = ''
-            this.gameZoneOpChange()
-        },
-        searchGameZone(query) {
-            if (query !== "") {
-                this.gameZone.loading = true;
-                let gameName = this.searchZoneParam.gameName
-                let gameId = this.searchZoneParam.gameId
-                this.$http.get("/Jiu96/queryZones?keyword=" + query +
-                    "&gameName=" + gameName +
-                    "&gameId=" + gameId +
-                    "&queryRange=" + this.gameZone.serverRadio
-                ).then((res) => {
-                    let respData = res.data
-                    if (respData.code === 'S') {
-                        this.gameZone.ops = respData.data
-                    } else {
-                        ElMessage.error(respData.msg)
-                    }
-                    this.gameZone.loading = false
-                }).catch((error) => {
-                    console.log(error)
-                    ElMessage.error('意料之外的错误：' + error)
-                })
-            } else {
-                this.gameZone.ops = []
-            }
-        },
-        gameZoneOpChange() {
-            this.$emit('gameZoneOpChange', this.gameZone)
-        },
-        mounted() {
-            const entries = Object.entries(this.$refs.innerGameZoneRef);
-            for (const [key, value] of entries) {
-                this[key] = value;
-            }
-        }
-    }
-}
-</script> -->
 <script setup>
 import { ElMessage } from 'element-plus'
-import { reactive,getCurrentInstance } from 'vue';
-const globalProperties = getCurrentInstance().appContext.config.globalProperties;
+import { reactive,getCurrentInstance } from 'vue'
+const globalProperties = getCurrentInstance().appContext.config.globalProperties
 const gameZone = reactive({
     op: '',
     ops: [],
@@ -83,6 +22,7 @@ defineExpose({clearSelectVal})
 function searchGameZone(query) {
     if (query !== "") {
         gameZone.loading = true;
+        console.log('props.searchZoneParam',props.searchZoneParam)
         let gameName = props.searchZoneParam.gameName
         let gameId = props.searchZoneParam.gameId
         globalProperties.$http.get("/Jiu96/queryZones?keyword=" + query +

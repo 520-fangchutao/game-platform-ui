@@ -1,29 +1,5 @@
-<!-- <script>
-export default {
-    data(){
-        return {
-            gameName: {
-                op: '',
-                ops: [{ name: '创游传奇', id: 7064 }]
-            }
-        }
-    },
-    methods: {
-        gameNameOpChange() {
-            this.$emit('gameNameOpChange', this.gameName)
-        }
-    },
-    mounted() {
-        //默认选中第一项
-        let ops = this.gameName.ops[0]
-        this.gameName.op = ops.name + '-' + ops.id
-        this.gameNameOpChange()
-        //console.log('默认选中第一项',this.gameName.op)
-    }
-}
-</script> -->
 <script setup>
-import { reactive,onMounted } from 'vue';
+import { reactive,onMounted } from 'vue'
 const gameName = reactive({
     op: '',
     ops: [{ name: '创游传奇', id: 7064 }]

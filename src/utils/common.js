@@ -1,3 +1,5 @@
+import clipboard3 from 'vue-clipboard3'
+import { ElMessage } from 'element-plus'
 export function countChar(sourceStr, countChar) {
   let matches = sourceStr.match(new RegExp(`${countChar}`, `g`))
   return matches ? matches.length : 0;
@@ -34,6 +36,16 @@ export function isEmpty(value) {
   }
 }
 
-export function isNotEmpty(value){
+export function isNotEmpty(value) {
   return !isEmpty(value)
+}
+
+export function copy(text) {
+  const { toClipboard } = clipboard3();
+  try {
+    toClipboard(text)
+    ElMessage.success('已复制到剪切板')
+  } catch (error) {
+    ElMessage.error('复制失败：' + error)
+  }
 }

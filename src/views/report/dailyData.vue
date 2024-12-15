@@ -1,106 +1,89 @@
-<script>
-import { ElMessage } from 'element-plus';
-import axios from 'axios';
-export default {
-    data() {
-        return {
-            reportDate: '',
-            uploadUrl: '',
-            pullBtnStatus: false,
-            dialogVisible: false,
-            fileName: '',
-            uploadDate: '',
-            outputText: '',
-            outputRes: ''
-        }
-    },
-    methods: {
-        uploadGameList() {
-            this.uploadUrl = axios.defaults.baseURL + '/report/uploadGameList'
-        },
-        uploadSuccess(respData) {
-            if (respData.code === 'S') {
-                ElMessage.success(respData.data)
-            } else {
-                ElMessage.error(respData.msg)
-            }
-        },
-        queryUpload() {
-            this.dialogVisible = true
-            this.$http.get('/report/queryUploadGameList').then((res) => {
-                let respData = res.data
-                if (respData.code === 'S') {
-                    let data = respData.data
-                    this.fileName = data.fileName
-                    this.uploadDate = data.uploadDate
-                    this.outputText = data.text
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.log(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-        },
-        pullReportData() {
-            this.pullBtnStatus = true
-            const formData = new FormData();
-            let date = this.$moment(this.reportDate).format('YYYY-MM-DD')
-            formData.append('date', date)
-            this.$http.post(
-                "/report/generateReport",
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-            ).then((res) => {
-                this.pullBtnStatus = false
-                let respData = res.data
-                if (respData.code === 'S') {
-                    this.outputRes = respData.data
-                    this.$copyText(respData.data).then(
-                        function (e) {
-                            ElMessage.success('数据已经复制到剪切板！')
-                        },
-                        function (e) {
-                            ElMessage.error('复制失败!')
-                        }
-                    )
-                } else {
-                    ElMessage.error(respData.msg)
-                }
-            }).catch((error) => {
-                console.error(error)
-                ElMessage.error('意料之外的错误：' + error)
-            })
-            ElMessage.success('拉取数据请求已经发出，请耐心等待处理结果！')
-        },
-        copyResult() {
-            this.$copyText(this.outputRes).then(
-                function (e) {
-                    ElMessage.success('数据已经复制到剪切板！')
-                },
-                function (e) {
-                    ElMessage.error('复制失败!')
-                }
-            )
-        }
-    },
-    mounted() {
-        this.reportDate = new Date()
+<script setup>
+import { ref, getCurrentInstance,onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
+import moment from 'moment';
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+const globalProperties = getCurrentInstance().appContext.config.globalProperties
+let reportDate = ref('')
+let uploadUrl = ref('')
+let pullBtnStatus = ref(false)
+let dialogVisible = ref(false)
+let fileName = ref('')
+let uploadDate = ref('')
+let outputText = ref('')
+let outputRes = ref('')
+function uploadGameList() {
+    uploadUrl.value = axios.defaults.baseURL + '/report/uploadGameList'
+}
+function uploadSuccess(respData) {
+    if (respData.code === 'S') {
+        ElMessage.success(respData.data)
+    } else {
+        ElMessage.error(respData.msg)
     }
 }
+function queryUpload() {
+    dialogVisible.value = true
+    globalProperties.$http.get('/report/queryUploadGameList').then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            let data = respData.data
+            fileName.value = data.fileName
+            uploadDate.value = data.uploadDate
+            outputText.value = data.text
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.log(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+}
+function pullReportData() {
+    pullBtnStatus.value = true
+    const formData = new FormData();
+    let date = moment(reportDate.value).format('YYYY-MM-DD')
+    formData.append('date', date)
+    globalProperties.$http.post(
+        "/report/generateReport",
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+    ).then((res) => {
+        pullBtnStatus.value = false
+        let respData = res.data
+        if (respData.code === 'S') {
+            outputRes.value = respData.data
+            //globalProperties.$commUtil.copy(outputRes.value)
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.error(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+    ElMessage.success('拉取数据请求已经发出，请耐心等待处理结果！')
+}
+function copyResult() {
+    globalProperties.$commUtil.copy(outputRes.value)
+}
+onMounted(() => {
+    reportDate.value = new Date()
+})
 </script>
-
 <template>
     <div class="reportBox">
         <el-row>
             <el-col :span="5">
                 <div class="block">
                     <span class="font-label">统计当日</span>
-                    <el-date-picker v-model="reportDate" type="date" placeholder="选择日期" size="small" />
+                    <el-config-provider :locale="zhCn">
+                        <el-date-picker v-model="reportDate" type="date" placeholder="选择日期" size="small" />
+                    </el-config-provider>
                 </div>
             </el-col>
             <el-col :span="2">
@@ -147,4 +130,8 @@ export default {
     </div>
 </template>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.reportBox {
+    padding: 15px;
+}
+</style>
