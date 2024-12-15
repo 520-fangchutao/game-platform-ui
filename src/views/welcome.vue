@@ -1,6 +1,6 @@
 <template>
     <div class="welcomBox">
-        <video muted autoplay loop>
+        <video autoplay loop>
             <source src="@/assets/yuanshen_login.mp4" type="video/mp4">
         </video>
     </div>
