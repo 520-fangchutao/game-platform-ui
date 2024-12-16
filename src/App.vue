@@ -1,5 +1,5 @@
 <script>
-import {Present,Document} from '@element-plus/icons-vue'
+import {Present,Document,HomeFilled} from '@element-plus/icons-vue'
 // 解决ERROR ResizeObserver loop completed with undelivered notifications.
 // 重写ResizeObserver的构造函数，并在其中定义并调用防抖函数
 window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
@@ -19,7 +19,8 @@ window.ResizeObserver = class ResizeObserver extends window.ResizeObserver {
 export default {
     components: {
         Present,
-        Document
+        Document,
+        HomeFilled
     }
 }
 </script>
@@ -30,6 +31,10 @@ export default {
             <el-container>
                 <el-aside width="200px">
                     <el-menu router>
+                        <!-- <el-menu-item index="/">
+                            <el-icon><HomeFilled /></el-icon>
+                            <span>原神启动</span>
+                        </el-menu-item> -->
                         <el-sub-menu index="1">
                             <template #title>
                                 <el-icon>
@@ -39,10 +44,6 @@ export default {
                             </template>
                             <el-menu-item index="/resource/996">996平台</el-menu-item>
                         </el-sub-menu>
-                        <!-- <el-menu-item index="/resource/996">
-                            <el-icon><Present /></el-icon>
-                            <span>资源发放</span>
-                        </el-menu-item> -->
                         <el-menu-item index="/report/dailyData">
                             <el-icon><Document /></el-icon>
                             <span>数据报表</span>

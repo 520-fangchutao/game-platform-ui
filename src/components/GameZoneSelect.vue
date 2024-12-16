@@ -21,8 +21,7 @@ defineExpose({clearSelectVal})
 
 function searchGameZone(query) {
     if (query !== "") {
-        gameZone.loading = true;
-        console.log('props.searchZoneParam',props.searchZoneParam)
+        gameZone.loading = true
         let gameName = props.searchZoneParam.gameName
         let gameId = props.searchZoneParam.gameId
         globalProperties.$http.get("/Jiu96/queryZones?keyword=" + query +

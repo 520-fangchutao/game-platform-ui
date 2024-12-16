@@ -45,27 +45,17 @@ let gameDesign = ref({
 })
 let queryResult = ref({
     dialogVisible: false,
-    code: '',
+    total: 0,
+    successCount: 0,
+    errorCount: 0,
+    tableVisible: false,
     tableData: [
         {
-            date: '2016-05-03',
-            name: 'Tom',
-            address: 'No. 189, Grove St, Los Angeles',
-        },
-        {
-            date: '2016-05-02',
-            name: 'Tom',
-            address: 'No. 189, Grove St, Los Angeles',
-        },
-        {
-            date: '2016-05-04',
-            name: 'Tom',
-            address: 'No. 189, Grove St, Los Angeles',
-        },
-        {
-            date: '2016-05-01',
-            name: 'Tom',
-            address: 'No. 189, Grove St, Los Angeles',
+            gameId: '',
+            readRow: 0,
+            reason: '',
+            roleName: '',
+            serverId: ''
         }
     ]
 })
@@ -236,11 +226,11 @@ function submitBatchData() {
     })
 }
 function queryBatchResult() {
-    queryResult.value.dialogVisible = true
     if (globalProperties.$commUtil.isEmpty(batchProcCode.value)) {
         ElMessage.info('该页面暂无批量申请记录！')
         return
     }
+    queryResult.value.dialogVisible = true
     let gn = gameName.value.op.split('-')[0];
     let code = batchProcCode.value
     globalProperties.$http.get(
@@ -248,8 +238,27 @@ function queryBatchResult() {
     ).then((res) => {
         let respData = res.data
         if (respData.code === 'S') {
-            let data = respData.data
-            ElMessage.success(`处理码:${batchProcCode.value}，总数:${data.total}，成功数:${data.successCount}，失败数:${data.errorCount}`)
+            queryResult.value.total = respData.data.total
+            queryResult.value.successCount = respData.data.successCount
+            queryResult.value.errorCount = respData.data.errorCount
+        } else {
+            ElMessage.error(respData.msg)
+        }
+    }).catch((error) => {
+        console.log(error)
+        ElMessage.error('意料之外的错误：' + error)
+    })
+}
+function mailFailDetail(){
+    queryResult.value.tableVisible = true
+    let gn = gameName.value.op.split('-')[0];
+    let code = batchProcCode.value
+    globalProperties.$http.get(
+        `/Jiu96/queryMailFailDetail?gameName=${gn}&code=${code}`
+    ).then((res) => {
+        let respData = res.data
+        if (respData.code === 'S') {
+            queryResult.value.tableData = respData.data
         } else {
             ElMessage.error(respData.msg)
         }
@@ -382,29 +391,33 @@ function itemDesignOpChange(newDesignSelect) {
                 <el-dialog v-model="queryResult.dialogVisible" width="80%" title="处理结果">
                     <div class="queryResultBox">
                         <el-row>
-                            <el-col :span="6">
+                            <el-col :span="5">
                                 <span class="font-label">处理码</span>
-                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                                <el-input v-model="batchProcCode" style="width: 200px" size="small" disabled />
                             </el-col>
-                            <el-col :span="6">
+                            <el-col :span="5">
                                 <span class="font-label">总条数</span>
-                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                                <el-input v-model="queryResult.total" style="width: 200px" size="small" disabled />
                             </el-col>
-                            <el-col :span="6">
+                            <el-col :span="5">
                                 <span class="font-label">成功数</span>
-                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                                <el-input v-model="queryResult.successCount" style="width: 200px" size="small" disabled />
                             </el-col>
-                            <el-col :span="6">
+                            <el-col :span="5">
                                 <span class="font-label">失败数</span>
-                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                                <el-input v-model="queryResult.errorCount" style="width: 200px" size="small" disabled />
+                            </el-col>
+                            <el-col :span="4">
+                                <el-button :disabled="queryResult.total !== (queryResult.successCount + queryResult.errorCount)" type="primary" size="small" @click="mailFailDetail">失败详情</el-button>
                             </el-col>
                         </el-row>
                         <el-row>
                             <el-col :span="24">
-                                <el-table :data="queryResult.tableData" style="width: 100%">
-                                    <el-table-column prop="date" label="Date" width="180" />
-                                    <el-table-column prop="name" label="Name" width="180" />
-                                    <el-table-column prop="address" label="Address" />
+                                <el-table v-show="queryResult.tableVisible" :data="queryResult.tableData" style="width: 100%">
+                                    <el-table-column prop="gameId" label="游戏ID" width="180" />
+                                    <el-table-column prop="readRow" label="读取行" width="180" />
+                                    <el-table-column prop="roleName" label="角色名" width="180" />
+                                    <el-table-column prop="reason" label="失败原因" />
                                 </el-table>
                             </el-col>
                         </el-row>
