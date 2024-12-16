@@ -20,7 +20,9 @@ import {
     ElDialog,
     ElConfigProvider,
     ElDatePicker,
-    ElIcon
+    ElIcon,
+    ElTable,
+    ElTableColumn
 } from "element-plus"
 
 export default (app) => {
@@ -46,4 +48,6 @@ export default (app) => {
     app.use(ElConfigProvider)
     app.use(ElDatePicker)
     app.use(ElIcon)
+    app.use(ElTable)
+    app.use(ElTableColumn)
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref,getCurrentInstance } from 'vue'
+import { ref, getCurrentInstance } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import ItemEqSelect from '@/components/ItemEqSelect.vue'
@@ -42,6 +42,32 @@ let gameDesign = ref({
     quantity: 1,
     dialogVisible: false,
     outputText: '',
+})
+let queryResult = ref({
+    dialogVisible: false,
+    code: '',
+    tableData: [
+        {
+            date: '2016-05-03',
+            name: 'Tom',
+            address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+            date: '2016-05-02',
+            name: 'Tom',
+            address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+            date: '2016-05-04',
+            name: 'Tom',
+            address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+            date: '2016-05-01',
+            name: 'Tom',
+            address: 'No. 189, Grove St, Los Angeles',
+        }
+    ]
 })
 let quantity = ref(1)
 let bindRadio = ref('1')
@@ -210,6 +236,7 @@ function submitBatchData() {
     })
 }
 function queryBatchResult() {
+    queryResult.value.dialogVisible = true
     if (globalProperties.$commUtil.isEmpty(batchProcCode.value)) {
         ElMessage.info('该页面暂无批量申请记录！')
         return
@@ -352,6 +379,37 @@ function itemDesignOpChange(newDesignSelect) {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="queryBatchResult">处理结果</el-button>
+                <el-dialog v-model="queryResult.dialogVisible" width="80%" title="处理结果">
+                    <div class="queryResultBox">
+                        <el-row>
+                            <el-col :span="6">
+                                <span class="font-label">处理码</span>
+                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                            </el-col>
+                            <el-col :span="6">
+                                <span class="font-label">总条数</span>
+                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                            </el-col>
+                            <el-col :span="6">
+                                <span class="font-label">成功数</span>
+                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                            </el-col>
+                            <el-col :span="6">
+                                <span class="font-label">失败数</span>
+                                <el-input v-model="queryResult.code" style="width: 200px" size="small" disabled />
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <el-table :data="queryResult.tableData" style="width: 100%">
+                                    <el-table-column prop="date" label="Date" width="180" />
+                                    <el-table-column prop="name" label="Name" width="180" />
+                                    <el-table-column prop="address" label="Address" />
+                                </el-table>
+                            </el-col>
+                        </el-row>
+                    </div>
+                </el-dialog>
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="gameDesign.dialogVisible = true">新建方案</el-button>
@@ -409,6 +467,7 @@ function itemDesignOpChange(newDesignSelect) {
 .mailReqBox {
     padding: 15px;
 }
+
 .clearAllItemsBtn {
     margin-bottom: 5px;
 }

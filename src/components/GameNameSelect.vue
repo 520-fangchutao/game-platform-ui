@@ -2,7 +2,7 @@
 import { reactive,onMounted } from 'vue'
 const gameName = reactive({
     op: '',
-    ops: [{ name: '创游传奇', id: 7064 }]
+    ops: [{ name: '创游传奇', id: 7064 },{ name: '刺刀养老院', id: 201510 }]
 })
 
 const emit = defineEmits(['gameNameOpChange']);
