@@ -267,6 +267,11 @@ function mailFailDetail(){
         ElMessage.error('意料之外的错误：' + error)
     })
 }
+function closeQueryResult(done){
+    queryResult.value.tableVisible = false
+    queryResult.value.tableData = []
+    done()
+}
 function copyOutput() {
     let copyText = outputText.value
     let rows = copyText.split('\n')
@@ -388,7 +393,7 @@ function itemDesignOpChange(newDesignSelect) {
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="queryBatchResult">处理结果</el-button>
-                <el-dialog v-model="queryResult.dialogVisible" width="80%" title="处理结果">
+                <el-dialog v-model="queryResult.dialogVisible" :before-close="closeQueryResult" width="80%" title="处理结果">
                     <div class="queryResultBox">
                         <el-row>
                             <el-col :span="5">
@@ -408,7 +413,7 @@ function itemDesignOpChange(newDesignSelect) {
                                 <el-input v-model="queryResult.errorCount" style="width: 200px" size="small" disabled />
                             </el-col>
                             <el-col :span="4">
-                                <el-button :disabled="queryResult.total !== (queryResult.successCount + queryResult.errorCount)" type="primary" size="small" @click="mailFailDetail">失败详情</el-button>
+                                <el-button :disabled="(queryResult.total !== -1) && (queryResult.errorCount === 0)" type="primary" size="small" @click="mailFailDetail">失败详情</el-button>
                             </el-col>
                         </el-row>
                         <el-row>
