@@ -13,6 +13,8 @@ let fileName = ref('')
 let uploadDate = ref('')
 let outputText = ref('')
 let outputRes = ref('')
+let downloadExcelUrl = ref('')
+let downloadExcelPicUrl = ref('')
 function uploadGameList() {
     uploadUrl.value = axios.defaults.baseURL + '/report/uploadGameList'
 }
@@ -57,8 +59,12 @@ function pullReportData() {
         pullBtnStatus.value = false
         let respData = res.data
         if (respData.code === 'S') {
-            outputRes.value = respData.data
-            //globalProperties.$commUtil.copy(outputRes.value)
+            if(respData.data.includes('http')){
+                downloadExcelPicUrl.value = respData.data.split('\n')[0]
+                downloadExcelUrl.value = respData.data.split('\n')[1]
+            }else{
+                outputRes.value = respData.data
+            }
         } else {
             ElMessage.error(respData.msg)
         }
@@ -70,6 +76,15 @@ function pullReportData() {
 }
 function copyResult() {
     globalProperties.$commUtil.copy(outputRes.value)
+}
+function copyTemplateSign(){
+    globalProperties.$commUtil.copy('{.zcNum}	{.active}	{.payMoney}	{.payUsers}	{.rate}	{.newMoney}	{.arpu}	{.arppu}	{.regPay}')
+}
+function lookPicture(){
+    window.open(downloadExcelPicUrl.value, '_blank')
+}
+function downloadExcel(){
+    window.open(downloadExcelUrl.value, '_blank')
 }
 onMounted(() => {
     reportDate.value = new Date()
@@ -87,13 +102,13 @@ onMounted(() => {
                 </div>
             </el-col>
             <el-col :span="2">
-                <el-upload name="gameListFile" accept=".txt" limit="1" :show-file-list="false" :action="uploadUrl"
+                <el-upload name="gameListFile" accept=".txt,.xlsx" limit="1" :show-file-list="false" :action="uploadUrl"
                     :on-success="uploadSuccess">
-                    <el-button type="primary" @click="uploadGameList">上传游戏列表</el-button>
+                    <el-button type="primary" size="small" @click="uploadGameList">上传游戏列表</el-button>
                 </el-upload>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary" @click="queryUpload">查看上传列表</el-button>
+                <el-button type="primary" size="small" @click="queryUpload">查看上传列表</el-button>
                 <el-dialog v-model="dialogVisible" width="75%" title="查看上传">
                     <div class="queryGameListBox">
                         <el-row>
@@ -116,15 +131,34 @@ onMounted(() => {
                 </el-dialog>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary" :disabled="pullBtnStatus" @click="pullReportData">拉取数据</el-button>
+                <el-button type="primary" size="small" :disabled="pullBtnStatus" @click="pullReportData">拉取数据</el-button>
             </el-col>
             <el-col :span="2">
-                <el-button type="primary" @click="copyResult">复制结果</el-button>
+                <el-button type="primary" size="small" @click="copyResult">复制结果</el-button>
+            </el-col>
+            <el-col :span="2">
+                <el-button type="primary" size="small" @click="copyTemplateSign">模板占位符</el-button>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="9">
+                <el-input v-model="downloadExcelPicUrl" style="width: 600px" size="small" />
+            </el-col>
+            <el-col :span="4">
+                <el-button type="primary" size="small" @click="lookPicture">查看图片</el-button>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="9">
+                <el-input v-model="downloadExcelUrl" style="width: 600px" size="small" />
+            </el-col>
+            <el-col :span="4">
+                <el-button type="primary" size="small" @click="downloadExcel">下载文件</el-button>
             </el-col>
         </el-row>
         <el-row>
             <el-col :span="24">
-                <el-input v-model="outputRes" style="width: 853px" :rows="30" type="textarea" resize="none" disabled />
+                <el-input v-model="outputRes" style="width: 726px" :rows="30" type="textarea" resize="none" disabled />
             </el-col>
         </el-row>
     </div>
